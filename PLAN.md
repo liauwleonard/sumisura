@@ -54,12 +54,33 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 - [ ] **Put it in the tailor's hands and watch him use it** before building Phase 3
 
 ## Phase 3 — Sync + multi-user
-- [ ] Supabase project, Postgres schema mirroring Dexie
-- [ ] Magic-link auth
-- [ ] **Row Level Security** — shop-scoped rules, verified with a second test account
-- [ ] Sync engine: local-first, background push/pull on `updated_at`, last-write-wins, soft deletes
-- [ ] Offline queue + conflict handling
-- [ ] Sync status indicator in the UI
+
+### 3a — Supabase project (Leonard)
+- [x] `supabase/schema.sql` drafted — tables, RLS, new-user trigger
+- [x] `supabase/SETUP.md` drafted — steps, isolation test, free-tier limits
+- [ ] Create the project (region: Singapore) and run `schema.sql`
+- [ ] Turn **off** public sign-ups; create the tailor's account from the dashboard
+- [ ] Fill `.env` from `.env.example`
+- [ ] Add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as GitHub repo secrets
+
+### 3b — Login ✅ built, awaiting live credentials
+- [x] `@supabase/supabase-js`, client that no-ops when unconfigured
+- [x] `AuthProvider` — session restore, silent refresh, sign out
+- [x] Magic-link sign-in screen, bilingual
+- [x] Gate: local-only when unconfigured, sign-in required when configured
+- [x] Sign-out and "local device only" state in Settings
+- [ ] **Verify a real magic link round-trip** — needs 3a
+
+### 3c — Sync engine
+- [ ] Resolve the real `shop_id` from membership after login
+- [ ] Push: local rows with `updated_at` newer than last sync
+- [ ] Pull: "everything in my shop changed since X", last-write-wins
+- [ ] Offline queue; retry on reconnect
+- [ ] Sync status indicator
+
+### 3d — Claim existing local data
+- [ ] On first sign-in, re-stamp local rows onto the real shop and push
+- [ ] Guard against double-claiming on a second device
 
 ## Phase 4 — Polish
 - [ ] Bahasa / English toggle, full dictionary

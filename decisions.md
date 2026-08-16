@@ -4,6 +4,36 @@ Newest first. Each entry: what was decided, why, and what was rejected.
 
 ---
 
+## 2026-08-16 — The cloud is optional, and sign-ups are invite-only
+
+### Unconfigured means local-only, never broken
+If `VITE_SUPABASE_*` are absent the app skips auth entirely and runs exactly as it did in
+Phase 2. Two reasons: the published site must keep working in the window between auth shipping
+and secrets being added to CI, and a tailor must never be locked out of measurements he already
+took because a config value went missing. Rejected: failing hard on missing config, which is
+tidier for a developer and hostile to the person actually using the app.
+
+### Invite-only sign-ups
+`shouldCreateUser: false`, with accounts created from the Supabase dashboard. The anon key is
+public by design, and with open sign-ups anyone scraping GitHub could register accounts and
+exhaust the free tier's email quota. For a one- or two-person shop, an invite is no burden.
+
+### Magic link, no passwords
+A tailor should not have a password to forget, and password reset is just email login with
+extra steps. Trade-off: login depends on him receiving email on the device — confirmed
+acceptable before building.
+
+### Timestamps stay epoch milliseconds in Postgres
+`bigint`, matching the local Dexie records exactly, rather than `timestamptz`. The cloud copy
+is a mirror, not a second source of truth; one representation of "when" removes a whole class
+of timezone conversion bugs at sync time.
+
+### The change log is append-only in the database
+`change_log` has select and insert policies and deliberately no update or delete policy. An
+audit trail that can be quietly rewritten is not an audit trail.
+
+---
+
 ## 2026-08-16 — English default; preferences persist only on explicit choice
 
 Default language switched from Bahasa to English at Leonard's request. Bahasa remains one toggle

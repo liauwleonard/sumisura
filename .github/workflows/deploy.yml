@@ -28,7 +28,14 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Vite inlines VITE_* values at build time, so they must be present here rather than at
+      # runtime. Both are safe to expose — see .env.example. If the secrets are unset the build
+      # still succeeds and the app runs local-only, which is the intended fallback.
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       # Pages must already exist with its source set to "GitHub Actions"
       # (Settings -> Pages -> Source). Deploying from a branch will NOT work: this workflow

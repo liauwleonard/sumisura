@@ -2,7 +2,10 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-.env
+# All env files — .env.local and .env.production would otherwise be committable.
+.env*
+!.env.example
+
 # Anchored: an unanchored `data/` also matches `src/data/`, which silently kept the
 # measurement and mannequin definitions out of the repo and broke the CI build.
 /data/

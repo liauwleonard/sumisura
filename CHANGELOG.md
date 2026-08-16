@@ -4,6 +4,29 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Phase 3a/3b: Supabase schema and magic-link login
+- `supabase/schema.sql` — five tables mirroring the local model, RLS on all of them,
+  `is_shop_member()` as the single membership check, and a trigger giving each new account its
+  own shop. `change_log` is insert-and-read only: no update or delete policy exists for it.
+- `supabase/SETUP.md` — the steps Leonard runs, plus how to *prove* isolation works with a
+  second account, and what the free-tier limits mean for one shop.
+- `@supabase/supabase-js`, `src/lib/supabase.ts`, `src/auth/AuthProvider.tsx`,
+  `src/screens/SignIn.tsx`. Magic link only — no passwords.
+- `shouldCreateUser: false` on sign-in: accounts are created from the dashboard, so a scraped
+  anon key cannot register users or burn the email quota.
+- **The cloud is optional.** With no credentials configured the app behaves exactly as before —
+  local-only, no login, fully usable — and Settings shows "Local device only — not synced".
+  This keeps the published site working between auth shipping and secrets being added, and
+  means a missing config can never lock the tailor out of his own measurements.
+- `.gitignore` now covers `.env*` (keeping `.env.example`). Previously only `.env` was ignored,
+  so a `.env.local` holding real credentials was committable.
+- Workflow passes the two `VITE_*` values from repo secrets; unset secrets still build fine.
+- Verified both paths: no config → app runs local-only with the correct Settings state;
+  placeholder config → sign-in screen gates the app. A real magic-link round-trip is still
+  unverified and needs the live project.
+- Bundle grew ~220 KB (precache 374 → 595 KiB) from the Supabase client. Acceptable for a PWA
+  that caches once; worth lazy-loading if it ever becomes noticeable on first install.
+
 ### 2026-08-16 — Live on GitHub Pages · English is now the default language
 - **Deployed and verified** at https://liauwleonard.github.io/sumisura/ — service worker
   activated and scoped to `/sumisura/`, precache populated, manifest correct, all three icons

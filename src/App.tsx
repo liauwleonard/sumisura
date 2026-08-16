@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { getShop } from './db/db'
 import { OrdersList } from './screens/OrdersList'
 import { OrderEditor } from './screens/OrderEditor'
-import { DEFAULT_LANG, SettingsContext, makeT, type Lang, type Unit } from './i18n'
-import { Button } from './components/ui'
+import { DEFAULT_LANG, SettingsContext, makeT, useSettings, type Lang, type Unit } from './i18n'
+import { Button, Chip } from './components/ui'
 import { UpdatePrompt } from './components/UpdatePrompt'
+import { AuthProvider, useAuth } from './auth/AuthProvider'
+import { SignIn } from './screens/SignIn'
 
 type Screen = { name: 'orders' } | { name: 'order'; id: string | null } | { name: 'settings' }
 
@@ -14,12 +16,6 @@ const read = <T,>(key: string, fallback: T): T =>
 export default function App() {
   const [lang, setLangState] = useState<Lang>(() => read('lang', DEFAULT_LANG))
   const [unit, setUnitState] = useState<Unit>(() => read('unit', 'cm' as Unit))
-  const [shopId, setShopId] = useState<string | null>(null)
-  const [screen, setScreen] = useState<Screen>({ name: 'orders' })
-
-  useEffect(() => {
-    getShop().then((shop) => setShopId(shop.id))
-  }, [])
 
   // Persist only on an explicit choice. Writing the default on mount would freeze whatever
   // default happened to ship first, so changing it later would never reach existing installs.
@@ -40,12 +36,43 @@ export default function App() {
     [lang, unit],
   )
 
-  if (!shopId) return null
-
-  const { t, setLang, setUnit } = settings
-
   return (
     <SettingsContext.Provider value={settings}>
+      <AuthProvider>
+        <Gate />
+      </AuthProvider>
+    </SettingsContext.Provider>
+  )
+}
+
+/**
+ * Decides whether to show the sign-in screen.
+ *
+ * With no cloud configured we go straight through — the app is local-only and always usable.
+ * Once configured, a session is required, but Supabase keeps it in localStorage and refreshes
+ * it silently, so the tailor signs in once and stays signed in, offline included.
+ */
+function Gate() {
+  const { cloud, session, loading } = useAuth()
+  if (loading) return null
+  if (cloud && !session) return <SignIn />
+  return <Shell />
+}
+
+function Shell() {
+  const { t, lang, unit, setLang, setUnit } = useSettings()
+  const { cloud, session, signOut } = useAuth()
+  const [shopId, setShopId] = useState<string | null>(null)
+  const [screen, setScreen] = useState<Screen>({ name: 'orders' })
+
+  useEffect(() => {
+    getShop().then((shop) => setShopId(shop.id))
+  }, [])
+
+  if (!shopId) return null
+
+  return (
+    <>
       <UpdatePrompt />
       <div className="min-h-full">
         {screen.name !== 'order' && (
@@ -123,9 +150,23 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            <div className="rounded-xl border border-stone-200 bg-white p-4">
+              {cloud && session ? (
+                <>
+                  <div className="mb-2 text-sm text-stone-600">
+                    {t('signedInAs')}{' '}
+                    <span className="font-medium text-stone-800">{session.user.email}</span>
+                  </div>
+                  <Button onClick={signOut}>{t('signOut')}</Button>
+                </>
+              ) : (
+                <Chip>{t('localOnlyMode')}</Chip>
+              )}
+            </div>
           </div>
         )}
       </div>
-    </SettingsContext.Provider>
+    </>
   )
 }
