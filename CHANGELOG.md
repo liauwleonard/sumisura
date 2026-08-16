@@ -4,6 +4,19 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Fixed CI build: three source files were never committed
+- **`src/data/` was being ignored by git.** The scaffold's `.gitignore` had an unanchored
+  `data/` rule, which matches `data/` at *any* depth — so `src/data/measurements.ts`,
+  `src/data/mannequin.ts` and `src/data/cutStyles.ts` were silently excluded from every commit.
+  The GitHub Actions build failed with `Cannot find module '../data/measurements'`.
+  Local builds passed because the files were on disk.
+- Anchored the rule to `/data/` (the top-level scaffold folder only) and committed the three
+  missing files.
+- Bumped the workflow to `actions/checkout@v5`, `actions/setup-node@v5` and Node 22 — the run
+  warned that Node 20 actions are deprecated.
+- Verified properly this time: extracted the committed tree to a clean directory and ran
+  `npm ci && npm run build` there — the exact CI sequence. Builds clean.
+
 ### 2026-08-16 — Build fix (would have failed CI) + header polish
 - **Fixed a build failure that only appears on a clean checkout.** Dexie 4 and
   `dexie-react-hooks` declare no `types` condition in their package `exports` maps, so

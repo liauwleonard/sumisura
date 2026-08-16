@@ -87,6 +87,15 @@ TypeScript — they can be ignored or removed.
   `any` and the build breaks on a clean checkout.
 - **`tsc -b` caches aggressively.** After renames or dependency changes, verify with a real clean
   build (`rm -f tsconfig.tsbuildinfo && npm run build`) — that is what CI runs.
+- **`src/data/` is real source and must stay tracked.** `.gitignore` uses `/data/` (anchored) for
+  exactly this reason: an unanchored `data/` also matches `src/data/` and silently kept the
+  measurement, mannequin and cut-style definitions out of the repo. If a build fails with
+  "Cannot find module '../data/…'", check `git ls-files src/data/` first.
+- **GitHub Pages source must be "GitHub Actions"**, not a branch. The workflow uploads a built
+  artifact; a branch source would publish the raw repo, which has no built `dist`.
+- **Verify CI-shaped failures the CI way:**
+  `git archive $(git write-tree) | tar -x -C <tmp> && cd <tmp> && npm ci && npm run build`.
+  Building in the working tree can pass on files that were never committed.
 
 ## Conventions
 - Units: cm default, inch toggle. Store canonical in cm.
