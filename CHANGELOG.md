@@ -4,6 +4,20 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Build fix (would have failed CI) + header polish
+- **Fixed a build failure that only appears on a clean checkout.** Dexie 4 and
+  `dexie-react-hooks` declare no `types` condition in their package `exports` maps, so
+  `moduleResolution: "bundler"` resolved their JS but no declarations — and fell back to
+  type-checking the raw `.ts` sources shipped inside `dexie-react-hooks`. Every `db.*` call
+  degraded to `any` and ~20 errors surfaced. Added `paths` in `tsconfig.json` pointing at the
+  real `.d.ts` files (types only — Vite resolves the runtime modules itself).
+  Local incremental builds had been skipping the check and hiding this; `npm ci && npm run build`
+  in GitHub Actions would have failed.
+- Removed the scaffold's Python leftovers: `.venv` (broken — its console-script shebangs still
+  pointed at the pre-rename path) and `requirements.txt`. This project has no Python.
+- Header: tagline moved under the name and set in title case — "Sumisura / Made to Measure",
+  "Sumisura / Jahit Sesuai Ukuran".
+
 ### 2026-08-16 — Named the app: Sumisura
 - Project renamed from the working title `tailor-app` to **Sumisura**, from the Italian
   *su misura* (made to measure).

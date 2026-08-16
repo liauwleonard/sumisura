@@ -82,6 +82,11 @@ TypeScript — they can be ignored or removed.
   `scripts/make-icons.mjs` constants, then `node scripts/make-icons.mjs`.
 - **`base` is `/sumisura/`** in `vite.config.ts` and must match the GitHub repo name. Change one,
   change the other, and update `start_url`/`scope` in the manifest with it.
+- **Don't remove the `paths` entries in `tsconfig.json`.** Dexie 4 and `dexie-react-hooks` ship no
+  `types` condition in their package `exports`, so without them every `db.*` call silently becomes
+  `any` and the build breaks on a clean checkout.
+- **`tsc -b` caches aggressively.** After renames or dependency changes, verify with a real clean
+  build (`rm -f tsconfig.tsbuildinfo && npm run build`) — that is what CI runs.
 
 ## Conventions
 - Units: cm default, inch toggle. Store canonical in cm.

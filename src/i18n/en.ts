@@ -1,6 +1,6 @@
 export const en = {
   app: 'Sumisura',
-  tagline: 'Made to measure',
+  tagline: 'Made to Measure',
   // nav / general
   orders: 'Orders',
   customers: 'Customers',

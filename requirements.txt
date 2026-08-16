@@ -1,9 +1,0 @@
-pandas
-jupyter
-
-# --- stack extras (uncomment as needed) ---
-# sqlalchemy
-# psycopg2-binary   # PostgreSQL
-# pymongo           # MongoDB
-# boto3             # S3
-# pyathena          # Athena

@@ -40,12 +40,10 @@ export default function App() {
         {screen.name !== 'order' && (
           <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-100/90 backdrop-blur">
             <div className="mx-auto flex max-w-3xl items-center gap-3 p-4">
-              <h1 className="text-lg font-semibold tracking-tight">
-                {t('app')}
-                <span className="ml-2 hidden text-xs font-normal text-stone-500 sm:inline">
-                  {t('tagline')}
-                </span>
-              </h1>
+              <div>
+                <h1 className="text-lg font-semibold leading-tight tracking-tight">{t('app')}</h1>
+                <p className="text-xs leading-tight text-stone-500">{t('tagline')}</p>
+              </div>
               <nav className="ml-auto flex gap-2">
                 <Button
                   variant={screen.name === 'orders' ? 'primary' : 'ghost'}

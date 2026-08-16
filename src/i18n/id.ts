@@ -2,7 +2,7 @@ import type { Dict } from './en'
 
 export const id: Dict = {
   app: 'Sumisura',
-  tagline: 'Jahit sesuai ukuran',
+  tagline: 'Jahit Sesuai Ukuran',
   orders: 'Pesanan',
   customers: 'Pelanggan',
   newOrder: 'Pesanan Baru',

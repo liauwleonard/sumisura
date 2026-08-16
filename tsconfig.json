@@ -6,6 +6,14 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
+    // Dexie 4 and dexie-react-hooks declare no "types" condition in their package exports map,
+    // so bundler resolution finds their JS but no declarations — and falls back to type-checking
+    // the raw .ts sources shipped inside dexie-react-hooks. Point at the real .d.ts files.
+    // Types only; Vite resolves the runtime modules itself.
+    "paths": {
+      "dexie": ["./node_modules/dexie/dist/dexie.d.ts"],
+      "dexie-react-hooks": ["./node_modules/dexie-react-hooks/dist/dexie-react-hooks.d.ts"]
+    },
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
