@@ -167,6 +167,8 @@ create policy change_log_insert on public.change_log
 
 -- Without this, a tailor signing in for the first time would have an account but belong to no
 -- shop, so every policy above would deny them and the app would look empty and broken.
+-- The shop name can be set when inviting the user, by putting {"shop_name": "..."} in their
+-- user metadata. Falls back to 'My Shop', and is renameable later — see RENAMING below.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -174,10 +176,13 @@ security definer
 set search_path = public
 as $$
 declare
-  new_shop uuid;
+  new_shop  uuid;
+  wanted    text;
 begin
+  wanted := nullif(trim(coalesce(new.raw_user_meta_data ->> 'shop_name', '')), '');
+
   insert into public.shops (name, created_at)
-  values ('My Shop', (extract(epoch from now()) * 1000)::bigint)
+  values (coalesce(wanted, 'My Shop'), (extract(epoch from now()) * 1000)::bigint)
   returning id into new_shop;
 
   insert into public.shop_members (shop_id, user_id, role)
@@ -191,3 +196,21 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ---------------------------------------------------------------------------
+-- RENAMING a shop
+-- ---------------------------------------------------------------------------
+--
+-- The trigger above only runs once, when an account is created. To rename an existing shop,
+-- run this (it renames whichever shop the given user owns):
+--
+--   update public.shops
+--   set name = 'Sartoria Budi'
+--   where id = (
+--     select m.shop_id
+--     from public.shop_members m
+--     join auth.users u on u.id = m.user_id
+--     where u.email = 'you@example.com'
+--   );
+--
+-- Phase 3c adds a shop-name field in the app's Settings so this stops needing SQL.
