@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Full-bleed background: maskable icons are cropped by the OS, so keep all content
+       inside the centre 80% safe zone (x/y roughly 51–461). -->
+  <rect width="512" height="512" fill="#b45309"/>
+  <!-- Jacket lapel V + button. Reads as tailoring even at 32px. -->
+  <path d="M150 128 L256 322 L362 128" fill="none" stroke="#ffffff" stroke-width="46"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="398" r="27" fill="#ffffff"/>
+</svg>

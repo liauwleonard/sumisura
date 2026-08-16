@@ -1,0 +1,122 @@
+import { useEffect, useMemo, useState } from 'react'
+import { getShop } from './db/db'
+import { OrdersList } from './screens/OrdersList'
+import { OrderEditor } from './screens/OrderEditor'
+import { SettingsContext, makeT, type Lang, type Unit } from './i18n'
+import { Button } from './components/ui'
+import { UpdatePrompt } from './components/UpdatePrompt'
+
+type Screen = { name: 'orders' } | { name: 'order'; id: string | null } | { name: 'settings' }
+
+const read = <T,>(key: string, fallback: T): T =>
+  (localStorage.getItem(key) as T | null) ?? fallback
+
+export default function App() {
+  const [lang, setLang] = useState<Lang>(() => read('lang', 'id' as Lang))
+  const [unit, setUnit] = useState<Unit>(() => read('unit', 'cm' as Unit))
+  const [shopId, setShopId] = useState<string | null>(null)
+  const [screen, setScreen] = useState<Screen>({ name: 'orders' })
+
+  useEffect(() => {
+    getShop().then((shop) => setShopId(shop.id))
+  }, [])
+
+  useEffect(() => localStorage.setItem('lang', lang), [lang])
+  useEffect(() => localStorage.setItem('unit', unit), [unit])
+
+  const settings = useMemo(
+    () => ({ lang, unit, t: makeT(lang), setLang, setUnit }),
+    [lang, unit],
+  )
+
+  if (!shopId) return null
+
+  const t = settings.t
+
+  return (
+    <SettingsContext.Provider value={settings}>
+      <UpdatePrompt />
+      <div className="min-h-full">
+        {screen.name !== 'order' && (
+          <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-100/90 backdrop-blur">
+            <div className="mx-auto flex max-w-3xl items-center gap-3 p-4">
+              <h1 className="text-lg font-semibold tracking-tight">
+                {t('app')}
+                <span className="ml-2 hidden text-xs font-normal text-stone-500 sm:inline">
+                  {t('tagline')}
+                </span>
+              </h1>
+              <nav className="ml-auto flex gap-2">
+                <Button
+                  variant={screen.name === 'orders' ? 'primary' : 'ghost'}
+                  onClick={() => setScreen({ name: 'orders' })}
+                >
+                  {t('orders')}
+                </Button>
+                <Button
+                  variant={screen.name === 'settings' ? 'primary' : 'ghost'}
+                  onClick={() => setScreen({ name: 'settings' })}
+                >
+                  {t('settings')}
+                </Button>
+              </nav>
+            </div>
+          </header>
+        )}
+
+        {screen.name === 'orders' && (
+          <>
+            <OrdersList shopId={shopId} onOpen={(id) => setScreen({ name: 'order', id })} />
+            <button
+              onClick={() => setScreen({ name: 'order', id: null })}
+              className="fixed bottom-6 right-6 rounded-full bg-amber-700 px-6 py-4 font-semibold text-white shadow-lg hover:bg-amber-800"
+            >
+              + {t('newOrder')}
+            </button>
+          </>
+        )}
+
+        {screen.name === 'order' && (
+          <OrderEditor
+            shopId={shopId}
+            orderId={screen.id}
+            onClose={() => setScreen({ name: 'orders' })}
+          />
+        )}
+
+        {screen.name === 'settings' && (
+          <div className="mx-auto max-w-3xl space-y-4 p-4">
+            <div className="rounded-xl border border-stone-200 bg-white p-4">
+              <div className="mb-2 text-sm font-medium text-stone-600">{t('language')}</div>
+              <div className="flex gap-2">
+                {(['id', 'en'] as Lang[]).map((l) => (
+                  <Button
+                    key={l}
+                    variant={lang === l ? 'primary' : 'secondary'}
+                    onClick={() => setLang(l)}
+                  >
+                    {l === 'id' ? 'Bahasa Indonesia' : 'English'}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-stone-200 bg-white p-4">
+              <div className="mb-2 text-sm font-medium text-stone-600">{t('units')}</div>
+              <div className="flex gap-2">
+                {(['cm', 'in'] as Unit[]).map((u) => (
+                  <Button
+                    key={u}
+                    variant={unit === u ? 'primary' : 'secondary'}
+                    onClick={() => setUnit(u)}
+                  >
+                    {u}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </SettingsContext.Provider>
+  )
+}

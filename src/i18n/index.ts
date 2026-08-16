@@ -1,0 +1,42 @@
+import { createContext, useContext } from 'react'
+import { en, type Dict } from './en'
+import { id } from './id'
+
+export type Lang = 'id' | 'en'
+export type Unit = 'cm' | 'in'
+
+const DICTS: Record<Lang, Dict> = { en, id }
+
+export type T = (key: keyof Dict, vars?: Record<string, string | number>) => string
+
+export interface Settings {
+  lang: Lang
+  unit: Unit
+  t: T
+  setLang: (l: Lang) => void
+  setUnit: (u: Unit) => void
+}
+
+export const makeT =
+  (lang: Lang): T =>
+  (key, vars) => {
+    let s: string = DICTS[lang][key] ?? String(key)
+    if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v))
+    return s
+  }
+
+/** Field/option labels are looked up by prefix so stored keys stay stable and renameable. */
+export const label = (t: T, prefix: string, key: string) =>
+  t(`${prefix}${key}` as keyof Dict) === `${prefix}${key}`
+    ? key.replaceAll('_', ' ')
+    : t(`${prefix}${key}` as keyof Dict)
+
+export const SettingsContext = createContext<Settings>({
+  lang: 'id',
+  unit: 'cm',
+  t: makeT('id'),
+  setLang: () => {},
+  setUnit: () => {},
+})
+
+export const useSettings = () => useContext(SettingsContext)
