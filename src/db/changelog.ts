@@ -76,6 +76,7 @@ export function diffOrder(before: Order | undefined, after: Order): Diff[] {
   pushIfChanged(out, 'order', 'type', before.type, after.type)
   pushIfChanged(out, 'order', 'dueDate', before.dueDate, after.dueDate)
   pushIfChanged(out, 'order', 'notes', before.notes, after.notes)
+  pushIfChanged(out, 'order', 'deleted', before.deletedAt, after.deletedAt)
   pushIfChanged(out, 'order', 'posture', before.posture.join(','), after.posture.join(','))
   pushIfChanged(out, 'order', 'postureNotes', before.postureNotes, after.postureNotes)
 
@@ -88,6 +89,7 @@ export function diffCustomer(before: Customer | undefined, after: Customer): Dif
   for (const key of ['name', 'phone', 'address', 'notes'] as const) {
     pushIfChanged(out, 'customer', key, before[key], after[key])
   }
+  pushIfChanged(out, 'customer', 'deleted', before.deletedAt, after.deletedAt)
   return out
 }
 
@@ -151,3 +153,25 @@ export const historyFor = (orderId: string, field: string) =>
 
 export const historyForOrder = (orderId: string) =>
   db.changeLog.where('orderId').equals(orderId).reverse().sortBy('at')
+
+/**
+ * Soft delete — nothing is ever removed outright.
+ *
+ * A hard delete cannot sync: the row would simply reappear from whichever device had not heard
+ * about it yet. Setting deletedAt lets a deletion travel like any other edit, and leaves the
+ * record recoverable from the database if it turns out to have been a mistake.
+ */
+export async function deleteOrder(order: Order, reason?: string) {
+  await saveOrder({ ...order, deletedAt: now() }, reason)
+}
+
+/**
+ * Deleting a customer takes their orders with them, otherwise the orders list is left showing
+ * entries whose owner no longer exists. The caller is expected to have said so out loud first.
+ */
+export async function deleteCustomer(customer: Customer, orders: Order[], reason?: string) {
+  for (const order of orders) {
+    if (!order.deletedAt) await saveOrder({ ...order, deletedAt: now() }, reason)
+  }
+  await saveCustomer({ ...customer, deletedAt: now() }, reason)
+}

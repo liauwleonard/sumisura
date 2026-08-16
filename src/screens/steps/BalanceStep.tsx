@@ -1,9 +1,11 @@
 import {
   balanceOf,
+  discountAmount,
   itemsSubtotal,
   paidOf,
   paymentStatusOf,
   recalculatedTotal,
+  type DiscountType,
   type Order,
   type OrderItem,
   type Payment,
@@ -18,6 +20,18 @@ interface Props {
   onChange: (patch: Partial<Order>) => void
 }
 
+/** One width for every money field, so the column lines up down the card. */
+const MONEY_FIELD = 'w-36 text-right'
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-sm text-stone-600">{label}</span>
+      {children}
+    </div>
+  )
+}
+
 /** Deliberately dumb: prices, a discount, deposits, auto receivable. No invoices, no tax. */
 export function BalanceStep({ order, onChange }: Props) {
   const { t, lang } = useSettings()
@@ -26,6 +40,7 @@ export function BalanceStep({ order, onChange }: Props) {
   const subtotal = itemsSubtotal(order)
   const priced = subtotal > 0
   const status = paymentStatusOf(order)
+  const discountType: DiscountType = order.discountType ?? 'amount'
 
   /** Any change to item prices or the discount re-derives the stored total in one place. */
   const applyPricing = (patch: Partial<Order>) => {
@@ -54,21 +69,20 @@ export function BalanceStep({ order, onChange }: Props) {
 
         {order.items.length === 0 ? (
           // No garments yet, so there is nothing to break down — take a lump sum.
-          <Field label={t('price')}>
-            <MoneyInput value={order.price} onChange={(price) => onChange({ price })} />
-          </Field>
+          <Row label={t('price')}>
+            <MoneyInput className={MONEY_FIELD} value={order.price} onChange={(price) => onChange({ price })} />
+          </Row>
         ) : (
           <>
             {order.items.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                <span className="flex-1 text-sm text-stone-600">{t(`garment_${item.garment}`)}</span>
+              <Row key={item.id} label={t(`garment_${item.garment}`)}>
                 <MoneyInput
-                  className="w-40 text-right"
+                  className={MONEY_FIELD}
                   value={item.price ?? 0}
                   placeholder="0"
                   onChange={(price) => setItemPrice(item.id, price)}
                 />
-              </div>
+              </Row>
             ))}
 
             <div className="flex items-center justify-between border-t border-stone-200 pt-3 text-sm">
@@ -76,15 +90,51 @@ export function BalanceStep({ order, onChange }: Props) {
               <span className="font-medium">{formatMoney(subtotal, lang)}</span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="flex-1 text-sm text-stone-600">{t('discount')}</span>
-              <MoneyInput
-                className="w-40 text-right"
-                value={order.discount ?? 0}
-                placeholder="0"
-                onChange={(discount) => applyPricing({ discount })}
-              />
-            </div>
+            <Row label={t('discount')}>
+              <div className="flex items-center gap-2">
+                {/* Percent and rupiah share one stored value; the type decides how to read it. */}
+                <div className="flex overflow-hidden rounded-lg border border-stone-300">
+                  {(['amount', 'percent'] as DiscountType[]).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => applyPricing({ discountType: type })}
+                      className={`px-2.5 py-2 text-sm ${
+                        discountType === type ? 'bg-amber-700 text-white' : 'bg-white text-stone-600'
+                      }`}
+                    >
+                      {type === 'percent' ? '%' : 'Rp'}
+                    </button>
+                  ))}
+                </div>
+                {discountType === 'percent' ? (
+                  <input
+                    className={`${inputClass} ${MONEY_FIELD}`}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={order.discount || ''}
+                    onChange={(e) =>
+                      applyPricing({
+                        discount: Math.min(100, Number(e.target.value.replace(/\D/g, '')) || 0),
+                      })
+                    }
+                  />
+                ) : (
+                  <MoneyInput
+                    className={MONEY_FIELD}
+                    value={order.discount ?? 0}
+                    placeholder="0"
+                    onChange={(discount) => applyPricing({ discount })}
+                  />
+                )}
+              </div>
+            </Row>
+
+            {discountType === 'percent' && (order.discount ?? 0) > 0 && (
+              <div className="flex items-center justify-between text-sm text-stone-500">
+                <span />
+                <span>− {formatMoney(discountAmount(order), lang)}</span>
+              </div>
+            )}
           </>
         )}
 
@@ -126,6 +176,7 @@ export function BalanceStep({ order, onChange }: Props) {
             <div className="flex items-end gap-2">
               <Field label={t('amount')}>
                 <MoneyInput
+                  className={MONEY_FIELD}
                   value={p.amount}
                   onChange={(amount) => setPayment(p.id, { amount })}
                 />

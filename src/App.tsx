@@ -129,15 +129,7 @@ function Shell() {
         )}
 
         {screen.name === 'orders' && (
-          <>
-            <OrdersList shopId={shopId} onOpen={openOrder} />
-            <button
-              onClick={() => openOrder(null)}
-              className="fixed bottom-6 right-6 rounded-full bg-amber-700 px-6 py-4 font-semibold text-white shadow-lg hover:bg-amber-800"
-            >
-              + {t('newOrder')}
-            </button>
-          </>
+          <OrdersList shopId={shopId} onOpen={openOrder} onNew={() => openOrder(null)} />
         )}
 
         {screen.name === 'customers' && (

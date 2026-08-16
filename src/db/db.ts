@@ -26,7 +26,7 @@ export const newId = () => crypto.randomUUID()
 export const now = () => Date.now()
 
 /** Single local shop until Phase 3 introduces accounts. */
-const LOCAL_SHOP_ID = 'local-shop'
+export const LOCAL_SHOP_ID = 'local-shop'
 
 export async function getShop(): Promise<Shop> {
   const existing = await db.shops.get(LOCAL_SHOP_ID)

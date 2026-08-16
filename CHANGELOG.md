@@ -4,6 +4,36 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Fixed: a second account on the same device absorbed the first one's data
+- `claimLocalRows` matched "any shop that is not mine" (`notEqual`), so on a shared device —
+  one person signs out, another signs in — the second account claimed the first one's customers
+  and orders, then pushed them to their own cloud. Now it claims only rows carrying
+  `LOCAL_SHOP_ID`, i.e. work genuinely done before anyone signed in.
+- Found because Leonard asked whether his tailor would see the test data. He would not: the
+  new-user trigger gives every account its own shop and RLS scopes every query to it. The
+  exception was this one path, on a device that had already been signed into another account.
+- Verified against both behaviours side by side: with the old rule a row belonging to another
+  real shop was re-stamped onto the signing-in account; with the new rule it stays put, while
+  genuinely pre-login work is still claimed as intended.
+
+### 2026-08-16 — Percentage discount, deletes, and layout fixes
+- **Discount can be a percentage or an amount.** `discountType` decides how `discount` is read;
+  `discountAmount()` converts either to rupiah. Percentages are capped at 100 %, so a slip of
+  the keyboard cannot produce a negative total, and the rupiah equivalent is shown underneath
+  so the tailor always sees what the customer is actually saving.
+- **Uniform money fields.** One `MONEY_FIELD` width used by every price, discount and payment
+  input, so the numbers line up in a column instead of stretching to different widths.
+- **Delete orders and customers**, both soft (`deletedAt`), both recorded in the change log.
+  A hard delete cannot sync — the row would reappear from whichever device had not heard about
+  it — so nothing is ever removed outright and everything stays recoverable in the database.
+- Deleting a customer takes their orders with it, and the confirmation says so with the count.
+  Leaving the orders behind would show entries whose owner no longer exists.
+- **"+ New Order" moved into the filter row**, next to Active / Receivables / All. A floating
+  bottom-right button is a long way from the eye on a laptop.
+- Verified: 10 % of 9,000,000 → −900,000, total 8,100,000; typing 500 clamps to 100 % and the
+  total floors at 0. Deleting order #5 removed it from the list; deleting Budi Santoso removed
+  him and soft-deleted both his orders, with every row still present in the database.
+
 ### 2026-08-16 — Per-garment pricing, discount, money formatting, customer sorting
 - **Prices per garment.** `OrderItem.price` is optional; the Balance tab lists each garment in
   the order with its own price, then Subtotal → Discount → Total.

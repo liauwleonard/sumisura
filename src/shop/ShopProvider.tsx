@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { db, getShop } from '../db/db'
+import { LOCAL_SHOP_ID, db, getShop } from '../db/db'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 
@@ -106,23 +106,30 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Anything created before signing in belongs to the on-device shop. Re-stamp it onto the real
- * shop so the tailor's existing work isn't stranded and invisible the moment he logs in.
+ * Work done before anyone signed in belongs to the on-device shop, so it is re-stamped onto the
+ * real shop and stops being stranded and invisible.
+ *
+ * Crucially this claims ONLY rows carrying `LOCAL_SHOP_ID`. Matching "any shop that is not
+ * mine" would mean that on a shared device — one tailor signs out, another signs in — the
+ * second account would absorb the first one's customers and push them to their own cloud.
+ * Rows already belonging to a real shop stay with that shop, invisible to everyone else.
  *
  * Timestamps are left untouched: they record when the work actually happened, and sync decides
  * what to push from its own watermark rather than from these values.
  */
 async function claimLocalRows(shopId: string) {
+  if (shopId === LOCAL_SHOP_ID) return
+
   // Each table is handled explicitly: looping over them as a union makes bulkPut's overloads
   // ambiguous, and the repetition is cheaper than the workaround.
   await db.transaction('rw', db.customers, db.orders, db.changeLog, async () => {
-    const customers = await db.customers.where('shopId').notEqual(shopId).toArray()
+    const customers = await db.customers.where('shopId').equals(LOCAL_SHOP_ID).toArray()
     if (customers.length) await db.customers.bulkPut(customers.map((r) => ({ ...r, shopId })))
 
-    const orders = await db.orders.where('shopId').notEqual(shopId).toArray()
+    const orders = await db.orders.where('shopId').equals(LOCAL_SHOP_ID).toArray()
     if (orders.length) await db.orders.bulkPut(orders.map((r) => ({ ...r, shopId })))
 
-    const log = await db.changeLog.where('shopId').notEqual(shopId).toArray()
+    const log = await db.changeLog.where('shopId').equals(LOCAL_SHOP_ID).toArray()
     if (log.length) await db.changeLog.bulkPut(log.map((r) => ({ ...r, shopId })))
   })
 }

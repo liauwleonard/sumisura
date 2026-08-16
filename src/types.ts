@@ -50,6 +50,8 @@ export interface Material {
   notes?: string
 }
 
+export type DiscountType = 'amount' | 'percent'
+
 export interface Payment {
   id: ID
   amount: number
@@ -87,7 +89,9 @@ export interface Order {
    * and sync all keep working off one number rather than re-deriving it in four places.
    */
   price: number
+  /** Value only — `discountType` says whether it means rupiah or per cent. */
   discount?: number
+  discountType?: DiscountType
   payments: Payment[]
   dueDate?: number
   notes?: string
@@ -132,10 +136,21 @@ export const itemsSubtotal = (order: Order) =>
  * sum — including every order made before per-item pricing existed — keeps its value instead
  * of silently collapsing to zero.
  */
+/** What the discount comes to in rupiah, whichever way it was entered. */
+export function discountAmount(order: Order): number {
+  const value = order.discount ?? 0
+  if (value <= 0) return 0
+  if (order.discountType === 'percent') {
+    // Capped at 100% so a slip of the keyboard cannot turn into a negative total.
+    return Math.round((itemsSubtotal(order) * Math.min(value, 100)) / 100)
+  }
+  return value
+}
+
 export function recalculatedTotal(order: Order): number {
   const subtotal = itemsSubtotal(order)
   if (subtotal <= 0) return order.price
-  return Math.max(0, subtotal - (order.discount ?? 0))
+  return Math.max(0, subtotal - discountAmount(order))
 }
 
 export const balanceOf = (order: Order) => order.price - paidOf(order)

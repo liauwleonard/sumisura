@@ -4,8 +4,9 @@ import { db } from '../db/db'
 import { balanceOf, type Customer, type Order } from '../types'
 import { formatDate, formatMoney, normalize, phoneKey, whatsappNumber } from '../lib/format'
 import { plural, useSettings } from '../i18n'
-import { Card, Chip, inputClass } from '../components/ui'
+import { Button, Card, Chip, inputClass } from '../components/ui'
 import { CustomerFields } from '../components/CustomerFields'
+import { deleteCustomer } from '../db/changelog'
 
 type SortKey = 'name' | 'phone' | 'value' | 'receivable'
 
@@ -164,6 +165,22 @@ export function CustomersList({
 
                     {/* Same editable fields as inside an order — it is the same record. */}
                     <CustomerFields customer={customer} />
+
+                    <Button
+                      variant="danger"
+                      onClick={async () => {
+                        // Say plainly that the orders go too — this is the surprising part.
+                        const live = theirOrders.filter((o) => !o.deletedAt)
+                        const message = live.length
+                          ? t('confirmDeleteCustomerOrders', { name: customer.name, n: live.length })
+                          : t('confirmDeleteCustomer', { name: customer.name })
+                        if (!confirm(message)) return
+                        await deleteCustomer(customer, live)
+                        setOpenId(null)
+                      }}
+                    >
+                      {t('deleteCustomer')}
+                    </Button>
 
                     <div className="text-sm font-medium text-stone-600">{t('orders')}</div>
 

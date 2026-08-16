@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, newId, nextOrderNumber, now } from '../db/db'
-import { historyForOrder, saveOrder } from '../db/changelog'
+import { deleteOrder, historyForOrder, saveOrder } from '../db/changelog'
 import { prefillFromHistory, type Prefill } from '../lib/prefill'
 import {
   ORDER_STATUSES,
@@ -180,6 +180,18 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
         </h1>
         {dirty && <Chip tone="warn">•</Chip>}
         <div className="ml-auto flex items-center gap-2">
+          {isExisting && (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                if (!confirm(t('confirmDeleteOrder', { n: draft.number }))) return
+                await deleteOrder(draft)
+                onClose()
+              }}
+            >
+              {t('deleteOrder')}
+            </Button>
+          )}
           <Button variant="primary" disabled={!draft.customerId} onClick={() => persist()}>
             {dirty ? t('save') : t('saved')}
           </Button>

@@ -12,11 +12,19 @@ import {
 } from '../types'
 import { daysUntil, formatDate, formatMoney } from '../lib/format'
 import { useSettings } from '../i18n'
-import { Card, Chip } from '../components/ui'
+import { Button, Card, Chip } from '../components/ui'
 
 type Filter = 'active' | 'receivables' | 'all'
 
-export function OrdersList({ shopId, onOpen }: { shopId: string; onOpen: (id: string) => void }) {
+export function OrdersList({
+  shopId,
+  onOpen,
+  onNew,
+}: {
+  shopId: string
+  onOpen: (id: string) => void
+  onNew: () => void
+}) {
   const { t } = useSettings()
   const [filter, setFilter] = useState<Filter>('active')
 
@@ -40,18 +48,25 @@ export function OrdersList({ shopId, onOpen }: { shopId: string; onOpen: (id: st
 
   return (
     <div className="mx-auto max-w-3xl p-4 pb-28">
-      <div className="mb-4 flex gap-1 rounded-lg bg-stone-200 p-1">
-        {(['active', 'receivables', 'all'] as Filter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium ${
-              filter === f ? 'bg-white shadow-sm' : ''
-            }`}
-          >
-            {t(f === 'receivables' ? 'receivables' : f)}
-          </button>
-        ))}
+      {/* New Order sits with the filters rather than floating in a corner — on a laptop a
+          bottom-right button is a long way from where the eye already is. */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex flex-1 gap-1 rounded-lg bg-stone-200 p-1">
+          {(['active', 'receivables', 'all'] as Filter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium ${
+                filter === f ? 'bg-white shadow-sm' : ''
+              }`}
+            >
+              {t(f === 'receivables' ? 'receivables' : f)}
+            </button>
+          ))}
+        </div>
+        <Button variant="primary" className="shrink-0 whitespace-nowrap" onClick={onNew}>
+          + {t('newOrder')}
+        </Button>
       </div>
 
       {visible.length === 0 && <p className="py-12 text-center text-stone-500">{t('empty')}</p>}
