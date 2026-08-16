@@ -25,6 +25,13 @@ export const makeT =
     return s
   }
 
+/**
+ * Count with the right singular/plural wording. English needs it; Indonesian does not inflect
+ * for number, so its two forms are deliberately identical.
+ */
+export const plural = (t: T, key: 'customerCount' | 'orderCount', n: number) =>
+  t(n === 1 ? (`${key}_one` as keyof Dict) : key, { n })
+
 /** Field/option labels are looked up by prefix so stored keys stay stable and renameable. */
 export const label = (t: T, prefix: string, key: string) =>
   t(`${prefix}${key}` as keyof Dict) === `${prefix}${key}`

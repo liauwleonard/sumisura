@@ -1,14 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getShop } from './db/db'
+import { useMemo, useState } from 'react'
 import { OrdersList } from './screens/OrdersList'
 import { OrderEditor } from './screens/OrderEditor'
+import { CustomersList } from './screens/CustomersList'
+import { Profile } from './screens/Profile'
 import { DEFAULT_LANG, SettingsContext, makeT, useSettings, type Lang, type Unit } from './i18n'
-import { Button, Chip } from './components/ui'
+import { Button } from './components/ui'
 import { UpdatePrompt } from './components/UpdatePrompt'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
+import { ShopProvider, useShop } from './shop/ShopProvider'
 import { SignIn } from './screens/SignIn'
 
-type Screen = { name: 'orders' } | { name: 'order'; id: string | null } | { name: 'settings' }
+type Screen =
+  | { name: 'orders' }
+  | { name: 'customers' }
+  | { name: 'profile' }
+  | { name: 'order'; id: string | null }
 
 const read = <T,>(key: string, fallback: T): T =>
   (localStorage.getItem(key) as T | null) ?? fallback
@@ -39,7 +45,9 @@ export default function App() {
   return (
     <SettingsContext.Provider value={settings}>
       <AuthProvider>
-        <Gate />
+        <ShopProvider>
+          <Gate />
+        </ShopProvider>
       </AuthProvider>
     </SettingsContext.Provider>
   )
@@ -60,16 +68,13 @@ function Gate() {
 }
 
 function Shell() {
-  const { t, lang, unit, setLang, setUnit } = useSettings()
-  const { cloud, session, signOut } = useAuth()
-  const [shopId, setShopId] = useState<string | null>(null)
+  const { t } = useSettings()
+  const { id: shopId, name: shopName, ready } = useShop()
   const [screen, setScreen] = useState<Screen>({ name: 'orders' })
 
-  useEffect(() => {
-    getShop().then((shop) => setShopId(shop.id))
-  }, [])
+  if (!ready || !shopId) return null
 
-  if (!shopId) return null
+  const openOrder = (id: string | null) => setScreen({ name: 'order', id })
 
   return (
     <>
@@ -77,24 +82,44 @@ function Shell() {
       <div className="min-h-full">
         {screen.name !== 'order' && (
           <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-100/90 backdrop-blur">
-            <div className="mx-auto flex max-w-3xl items-center gap-3 p-4">
-              <div>
-                <h1 className="text-lg font-semibold leading-tight tracking-tight">{t('app')}</h1>
-                <p className="text-xs leading-tight text-stone-500">{t('tagline')}</p>
+            <div className="mx-auto flex max-w-3xl items-center gap-2 p-4">
+              <div className="min-w-0">
+                {/* The shop name, not the product name: at a glance you know which account
+                    you are in — the whole point of showing it here. */}
+                <h1 className="truncate text-lg font-semibold leading-tight tracking-tight">
+                  {shopName}
+                </h1>
+                <p className="truncate text-xs leading-tight text-stone-500">
+                  {t('app')} · {t('tagline')}
+                </p>
               </div>
-              <nav className="ml-auto flex gap-2">
+
+              <nav className="ml-auto flex shrink-0 items-center gap-1">
                 <Button
                   variant={screen.name === 'orders' ? 'primary' : 'ghost'}
+                  className="px-3"
                   onClick={() => setScreen({ name: 'orders' })}
                 >
                   {t('orders')}
                 </Button>
                 <Button
-                  variant={screen.name === 'settings' ? 'primary' : 'ghost'}
-                  onClick={() => setScreen({ name: 'settings' })}
+                  variant={screen.name === 'customers' ? 'primary' : 'ghost'}
+                  className="px-3"
+                  onClick={() => setScreen({ name: 'customers' })}
                 >
-                  {t('settings')}
+                  {t('customers')}
                 </Button>
+                <button
+                  aria-label={t('profile')}
+                  onClick={() => setScreen({ name: 'profile' })}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full font-semibold ${
+                    screen.name === 'profile'
+                      ? 'bg-amber-700 text-white'
+                      : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                  }`}
+                >
+                  {(shopName.trim()[0] ?? '?').toUpperCase()}
+                </button>
               </nav>
             </div>
           </header>
@@ -102,9 +127,9 @@ function Shell() {
 
         {screen.name === 'orders' && (
           <>
-            <OrdersList shopId={shopId} onOpen={(id) => setScreen({ name: 'order', id })} />
+            <OrdersList shopId={shopId} onOpen={openOrder} />
             <button
-              onClick={() => setScreen({ name: 'order', id: null })}
+              onClick={() => openOrder(null)}
               className="fixed bottom-6 right-6 rounded-full bg-amber-700 px-6 py-4 font-semibold text-white shadow-lg hover:bg-amber-800"
             >
               + {t('newOrder')}
@@ -112,59 +137,18 @@ function Shell() {
           </>
         )}
 
+        {screen.name === 'customers' && (
+          <CustomersList shopId={shopId} onOpenOrder={openOrder} />
+        )}
+
+        {screen.name === 'profile' && <Profile />}
+
         {screen.name === 'order' && (
           <OrderEditor
             shopId={shopId}
             orderId={screen.id}
             onClose={() => setScreen({ name: 'orders' })}
           />
-        )}
-
-        {screen.name === 'settings' && (
-          <div className="mx-auto max-w-3xl space-y-4 p-4">
-            <div className="rounded-xl border border-stone-200 bg-white p-4">
-              <div className="mb-2 text-sm font-medium text-stone-600">{t('language')}</div>
-              <div className="flex gap-2">
-                {(['id', 'en'] as Lang[]).map((l) => (
-                  <Button
-                    key={l}
-                    variant={lang === l ? 'primary' : 'secondary'}
-                    onClick={() => setLang(l)}
-                  >
-                    {l === 'id' ? 'Bahasa Indonesia' : 'English'}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-white p-4">
-              <div className="mb-2 text-sm font-medium text-stone-600">{t('units')}</div>
-              <div className="flex gap-2">
-                {(['cm', 'in'] as Unit[]).map((u) => (
-                  <Button
-                    key={u}
-                    variant={unit === u ? 'primary' : 'secondary'}
-                    onClick={() => setUnit(u)}
-                  >
-                    {u}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-stone-200 bg-white p-4">
-              {cloud && session ? (
-                <>
-                  <div className="mb-2 text-sm text-stone-600">
-                    {t('signedInAs')}{' '}
-                    <span className="font-medium text-stone-800">{session.user.email}</span>
-                  </div>
-                  <Button onClick={signOut}>{t('signOut')}</Button>
-                </>
-              ) : (
-                <Chip>{t('localOnlyMode')}</Chip>
-              )}
-            </div>
-          </div>
         )}
       </div>
     </>

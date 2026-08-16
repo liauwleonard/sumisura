@@ -72,15 +72,21 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 - [ ] **Verify a real magic link round-trip** — needs 3a
 
 ### 3c — Sync engine
-- [ ] Resolve the real `shop_id` from membership after login
+- [x] Resolve the real `shop_id` from membership after login (`ShopProvider`)
+- [x] Shop name in the header + renameable in Profile
 - [ ] Push: local rows with `updated_at` newer than last sync
 - [ ] Pull: "everything in my shop changed since X", last-write-wins
 - [ ] Offline queue; retry on reconnect
-- [ ] Sync status indicator
+- [ ] Sync status indicator (Profile currently shows "Not enabled yet")
 
-### 3d — Claim existing local data
-- [ ] On first sign-in, re-stamp local rows onto the real shop and push
-- [ ] Guard against double-claiming on a second device
+### 3d — Claim existing local data ✅
+- [x] On sign-in, re-stamp local rows onto the real shop
+- [x] Naturally idempotent: rows already carrying the real shop id are skipped, so a second
+      device claims nothing and cannot duplicate
+
+### Extra screens (requested 2026-08-16) ✅
+- [x] Customers tab — searchable list, order history, outstanding balance, call/WhatsApp
+- [x] Profile screen — shop name, account, sync status, language, units, sign out
 
 ## Phase 4 — Polish
 - [ ] Bahasa / English toggle, full dictionary

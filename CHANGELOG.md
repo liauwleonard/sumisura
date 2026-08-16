@@ -4,6 +4,28 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Shop identity in the header, Customers tab, Profile screen
+- **`ShopProvider`** works out whose shop this is: the account's shop read from Supabase when
+  signed in, the on-device shop otherwise. If a signed-in user somehow belongs to no shop it
+  falls back to local rather than showing an unexplained empty app.
+- **Phase 3d done early — local rows are claimed on sign-in.** Anything created before logging
+  in is re-stamped onto the real shop, so existing work isn't stranded and invisible. Edit
+  timestamps are left untouched: they record when the work happened, and sync will decide what
+  to push from its own watermark.
+- **Header shows the shop name**, with "Sumisura · Made to Measure" demoted beneath it — the
+  point is knowing which account you are in at a glance, which the product name cannot tell you.
+- **Customers tab**: searchable list by name or phone, with order count, last order date and
+  total outstanding per customer. Expanding one shows address, notes, Call/WhatsApp buttons and
+  their full order history; tapping an order opens it.
+- **Profile screen** behind an avatar button: editable shop name, signed-in email, role, sync
+  status, sign out. Language and units moved here, so the old Settings tab is gone and the nav
+  stays at three items.
+- Counts are pluralised properly ("1 order", not "1 orders"); the Indonesian forms are
+  deliberately identical since it does not inflect for number.
+- Verified in local-only mode with seeded data: header name, rename (header and avatar initial
+  both update), Customers list and expansion, Profile. The signed-in path is unverified —
+  it needs a live session.
+
 ### 2026-08-16 — Docs: new Supabase key names, region guidance
 - Supabase renamed its API keys: **publishable** (`sb_publishable_...`) is what older docs call
   `anon public`, and **secret** (`sb_secret_...`) replaces `service_role`. Updated
