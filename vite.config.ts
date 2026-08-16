@@ -19,8 +19,8 @@ export default defineConfig({
       manifest: {
         name: 'Sumisura',
         short_name: 'Sumisura',
-        description: 'Buku ukuran dan pesanan untuk penjahit',
-        lang: 'id',
+        description: 'Measurement and order book for tailors',
+        lang: 'en',
         start_url: BASE,
         scope: BASE,
         display: 'standalone',

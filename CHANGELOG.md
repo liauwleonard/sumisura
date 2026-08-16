@@ -4,6 +4,19 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Live on GitHub Pages · English is now the default language
+- **Deployed and verified** at https://liauwleonard.github.io/sumisura/ — service worker
+  activated and scoped to `/sumisura/`, precache populated, manifest correct, all three icons
+  200, Apple meta tags present, served over HTTPS. Walked the real flow on the live site:
+  created a customer, opened order #1, added a jacket, mannequin rendered with all labels.
+- **English is the default language** (`DEFAULT_LANG` in `src/i18n/index.ts`). Also switched
+  `<html lang>`, the meta description, and the manifest `lang`/`description` to English.
+- Language and unit are now persisted **only when explicitly chosen**, not written on mount.
+  Previously the default was saved to localStorage on first load, which would have frozen
+  Bahasa in place for anyone who had already opened the site — they would never have seen this
+  change. An explicit choice still survives reloads.
+- `INSTALL.md` is still Bahasa-first, since it is written for the tailor rather than the app.
+
 ### 2026-08-16 — Pages must be enabled by hand
 - Run #3 compiled successfully (the `src/data` fix worked) but failed at `configure-pages` with
   `Get Pages site failed … Not Found` — no Pages site existed on the repo.

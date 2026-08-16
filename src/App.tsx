@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getShop } from './db/db'
 import { OrdersList } from './screens/OrdersList'
 import { OrderEditor } from './screens/OrderEditor'
-import { SettingsContext, makeT, type Lang, type Unit } from './i18n'
+import { DEFAULT_LANG, SettingsContext, makeT, type Lang, type Unit } from './i18n'
 import { Button } from './components/ui'
 import { UpdatePrompt } from './components/UpdatePrompt'
 
@@ -12,8 +12,8 @@ const read = <T,>(key: string, fallback: T): T =>
   (localStorage.getItem(key) as T | null) ?? fallback
 
 export default function App() {
-  const [lang, setLang] = useState<Lang>(() => read('lang', 'id' as Lang))
-  const [unit, setUnit] = useState<Unit>(() => read('unit', 'cm' as Unit))
+  const [lang, setLangState] = useState<Lang>(() => read('lang', DEFAULT_LANG))
+  const [unit, setUnitState] = useState<Unit>(() => read('unit', 'cm' as Unit))
   const [shopId, setShopId] = useState<string | null>(null)
   const [screen, setScreen] = useState<Screen>({ name: 'orders' })
 
@@ -21,17 +21,28 @@ export default function App() {
     getShop().then((shop) => setShopId(shop.id))
   }, [])
 
-  useEffect(() => localStorage.setItem('lang', lang), [lang])
-  useEffect(() => localStorage.setItem('unit', unit), [unit])
-
+  // Persist only on an explicit choice. Writing the default on mount would freeze whatever
+  // default happened to ship first, so changing it later would never reach existing installs.
   const settings = useMemo(
-    () => ({ lang, unit, t: makeT(lang), setLang, setUnit }),
+    () => ({
+      lang,
+      unit,
+      t: makeT(lang),
+      setLang: (l: Lang) => {
+        localStorage.setItem('lang', l)
+        setLangState(l)
+      },
+      setUnit: (u: Unit) => {
+        localStorage.setItem('unit', u)
+        setUnitState(u)
+      },
+    }),
     [lang, unit],
   )
 
   if (!shopId) return null
 
-  const t = settings.t
+  const { t, setLang, setUnit } = settings
 
   return (
     <SettingsContext.Provider value={settings}>

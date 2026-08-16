@@ -33,9 +33,9 @@ Customers never log in — a customer is a record the tailor types, not an accou
 
 ## Status
 
-Phase 2 built and verified locally (2026-08-16) — installable PWA, works fully offline.
-**Not yet deployed:** the GitHub repo still needs to be created and pushed.
-Next after that: Phase 3 — login and cross-device sync.
+**Live at https://liauwleonard.github.io/sumisura/** — installable PWA, works fully offline.
+Verified end to end on the deployed site (2026-08-16).
+Next: Phase 3 — login and cross-device sync.
 
 See [PLAN.md](PLAN.md) for the roadmap, [decisions.md](decisions.md) for the reasoning, and
 [INSTALL.md](INSTALL.md) for the tailor-facing install guide.

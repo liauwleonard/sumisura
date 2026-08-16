@@ -31,10 +31,12 @@ export const label = (t: T, prefix: string, key: string) =>
     ? key.replaceAll('_', ' ')
     : t(`${prefix}${key}` as keyof Dict)
 
+export const DEFAULT_LANG: Lang = 'en'
+
 export const SettingsContext = createContext<Settings>({
-  lang: 'id',
+  lang: DEFAULT_LANG,
   unit: 'cm',
-  t: makeT('id'),
+  t: makeT(DEFAULT_LANG),
   setLang: () => {},
   setUnit: () => {},
 })

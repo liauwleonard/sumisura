@@ -4,6 +4,19 @@ Newest first. Each entry: what was decided, why, and what was rejected.
 
 ---
 
+## 2026-08-16 — English default; preferences persist only on explicit choice
+
+Default language switched from Bahasa to English at Leonard's request. Bahasa remains one toggle
+away in Settings and every string is still translated.
+
+The more interesting half: preferences used to be written to localStorage by an effect on mount,
+so the shipped default was captured on a user's very first load. That makes the default
+permanently unchangeable for anyone who has already opened the app — a later change would reach
+new installs only. Now `setLang`/`setUnit` write on an explicit choice and nothing else, so the
+default stays live until the user actually picks something.
+
+---
+
 ## 2026-08-16 — Named Sumisura
 
 *Su misura* is the Italian trade term for made-to-measure — it already carries both halves of what

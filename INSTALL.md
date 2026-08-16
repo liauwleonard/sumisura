@@ -6,8 +6,8 @@
 Buka tautan ini di perangkat Anda, lalu ikuti langkah untuk perangkat itu.
 *Open this link on your device, then follow the steps for that device.*
 
-> **https://GANTI-USERNAME.github.io/sumisura/**
-> *(ganti dengan alamat sebenarnya setelah aplikasi dipasang di internet)*
+> **https://liauwleonard.github.io/sumisura/**
+> 
 
 Aplikasi ini gratis, tidak perlu App Store, dan **bisa dipakai tanpa internet** setelah dipasang.
 *Free, no App Store needed, and works without internet once installed.*

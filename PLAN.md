@@ -8,8 +8,9 @@ and iPhone, all three in sync. He can open any past order and see exactly what i
 If the app is shared with another tailor, neither can see the other's data.
 
 ## Status
-Phase 2 built and verified locally (2026-08-16). **Not yet deployed** — no GitHub repo exists yet,
-which is the only remaining Phase 2 step.
+**Phase 2 complete — live at https://liauwleonard.github.io/sumisura/** (2026-08-16), verified
+end to end on the deployed site. Next: put it on the tailor's iPad and watch him use it before
+starting Phase 3 (sync).
 
 ---
 
