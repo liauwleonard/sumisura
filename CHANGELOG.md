@@ -4,6 +4,15 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Docs: new Supabase key names, region guidance
+- Supabase renamed its API keys: **publishable** (`sb_publishable_...`) is what older docs call
+  `anon public`, and **secret** (`sb_secret_...`) replaces `service_role`. Updated
+  `.env.example` and `supabase/SETUP.md` to name both, since projects show one or the other.
+  The env var stays `VITE_SUPABASE_ANON_KEY` either way.
+- Region guidance relaxed: Singapore is nearest, but an auto-assigned Tokyo costs ~50 ms per
+  round-trip from Jakarta on a background sync the tailor never waits for. Not worth recreating
+  a project over.
+
 ### 2026-08-16 — Phase 3a/3b: Supabase schema and magic-link login
 - `supabase/schema.sql` — five tables mirroring the local model, RLS on all of them,
   `is_shop_member()` as the single membership check, and a trigger giving each new account its

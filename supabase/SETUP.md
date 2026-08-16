@@ -9,8 +9,10 @@ firsthand. Roughly 15 minutes.
 2. **New project.** Name it `sumisura`.
 3. Pick a **database password** and put it in your password manager. You will rarely need it —
    the app never uses it — but it is not recoverable, only resettable.
-4. **Region: Singapore** (`ap-southeast-1`). Closest to Indonesia; every sync round-trip pays
-   this distance.
+4. **Region**: Singapore (`ap-southeast-1`) is closest to Indonesia. If the dashboard assigns
+   one for you — Tokyo, for instance — take it. Tokyo costs roughly 50 ms more per round-trip
+   from Jakarta, and sync runs in the background, so the tailor never waits on it. Not worth
+   recreating the project over.
 5. Wait ~2 minutes for provisioning.
 
 ## 2. Create the tables and security rules
@@ -23,18 +25,23 @@ Expect "Success. No rows returned". Re-running is safe.
 
 ## 3. Copy the two connection values
 
-Dashboard → **Project Settings** → **API**:
+Dashboard → **Project Settings** → **API Keys**:
 
 | Value | Looks like | Where it goes |
 |---|---|---|
 | Project URL | `https://abcdefgh.supabase.co` | `.env` → `VITE_SUPABASE_URL` |
-| `anon` `public` key | long `eyJ...` string | `.env` → `VITE_SUPABASE_ANON_KEY` |
+| **Publishable** key | `sb_publishable_...` | `.env` → `VITE_SUPABASE_ANON_KEY` |
 
-Take the key labelled **`anon` `public`**.
+Supabase renamed these keys. **Publishable** is what older docs call **`anon public`** — same
+key, same purpose. Older projects show it as a long `eyJ...` string instead; either works.
 
-> ⚠️ **Never copy the `service_role` key into this project.** It is on the same page and looks
-> similar. That key bypasses every security rule in `schema.sql`, and anything shipped to a
-> browser is public. The `anon` key is designed to be public and is powerless without a login.
+Our variable is named `VITE_SUPABASE_ANON_KEY` whichever label you see. Renaming it would mean
+touching the code, the workflow and the GitHub secrets for no behavioural gain.
+
+> ⚠️ **Never use the `secret` key** (`sb_secret_...`, formerly `service_role`). It sits on the
+> same page and looks similar. That key bypasses every security rule in `schema.sql`, and
+> anything shipped to a browser is public. The publishable key is *designed* to be public and
+> grants nothing on its own — every request is still judged against the caller's login.
 
 ## 4. Turn on email login
 
