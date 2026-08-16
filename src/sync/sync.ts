@@ -190,3 +190,18 @@ export function clearSyncMarks(shopId: string) {
     localStorage.removeItem(key(shopId, name))
   }
 }
+
+/**
+ * Call after restoring a backup.
+ *
+ * Restored rows keep the timestamps they were written with, which are older than the push
+ * watermark on this device. Without resetting it, push would decide they had already been sent
+ * and the restored data would sit locally forever, never reaching the cloud or the other
+ * devices — a silent failure in exactly the situation where the data matters most.
+ *
+ * Only the push side is reset: the pull watermarks are still accurate.
+ */
+export function resetPushMarks(shopId: string) {
+  localStorage.removeItem(key(shopId, 'pushed'))
+  localStorage.removeItem(key(shopId, 'pushedLog'))
+}

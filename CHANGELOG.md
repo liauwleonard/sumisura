@@ -4,6 +4,28 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Backup and restore
+- **Export** writes a plain-JSON file of the whole shop — customers, orders and the change log —
+  named `sumisura-<shop>-<date>.json`. Plain JSON on purpose: readable, diffable, and openable
+  in any text editor years from now, which a proprietary format would not be.
+- **Restore** shows what the file contains (shop, date, counts) and asks before touching
+  anything. It is additive: nothing local is deleted, and an incoming row only replaces a local
+  one when it is genuinely newer — the same last-write-wins rule sync uses, so importing an old
+  file cannot roll back newer work.
+- Rows are re-stamped onto the current shop, which is what makes the real recovery case work:
+  lost account → new account → import → the book is back.
+- Soft-deleted rows are included in the backup on purpose. Dropping them would turn a restore
+  into a way of resurrecting deleted customers on the next sync.
+- `resetPushMarks()` runs after a restore. Restored rows keep their original timestamps, which
+  are older than this device's push watermark — without resetting it, sync would treat them as
+  already sent and the restored data would sit locally forever, never reaching the cloud. A
+  silent failure in exactly the situation where the data matters most.
+- Verified the whole round trip: exported 5 customers / 5 orders / 13 log entries, wiped the
+  database completely, restored from the file — everything came back, deleted rows stayed
+  deleted rather than being resurrected, order totals intact, push watermarks cleared for
+  re-upload. Re-importing the same file after editing a record locally kept the newer edit and
+  skipped 10 already-current rows.
+
 ### 2026-08-16 — Fixed: a second account on the same device absorbed the first one's data
 - `claimLocalRows` matched "any shop that is not mine" (`notEqual`), so on a shared device —
   one person signs out, another signs in — the second account claimed the first one's customers

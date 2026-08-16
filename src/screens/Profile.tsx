@@ -4,6 +4,7 @@ import { useShop } from '../shop/ShopProvider'
 import { useSettings, type Lang, type Unit } from '../i18n'
 import { Button, Card, Chip, Field, inputClass } from '../components/ui'
 import { SyncStatus } from '../components/SyncStatus'
+import { BackupCard } from '../components/BackupCard'
 
 /** Who am I, whose shop is this, and is it the right account — checkable at a glance. */
 export function Profile() {
@@ -50,6 +51,8 @@ export function Profile() {
           </>
         )}
       </Card>
+
+      <BackupCard />
 
       <Card className="space-y-3">
         <div className="text-sm font-medium text-stone-600">{t('language')}</div>

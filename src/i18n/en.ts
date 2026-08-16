@@ -21,6 +21,18 @@ export const en = {
   settings: 'Settings',
   language: 'Language',
   units: 'Units',
+  backup: 'Backup',
+  backupHint: 'A copy of everything, saved as a file you keep. Do this now and then — it is the only copy nobody else controls.',
+  exportBackup: 'Save a backup file',
+  importBackup: 'Restore from a file',
+  backupFound: 'Backup from {shop}, {date}',
+  backupContains: '{customers} customers · {orders} orders',
+  restoreConfirm: 'Restore this into the current shop? Nothing is deleted, and newer work is kept.',
+  restore: 'Restore',
+  restored: 'Restored {n} records ({skipped} already up to date).',
+  backupNotABackup: 'That file is not a Sumisura backup.',
+  backupNewerVersion: 'That backup was made by a newer version of the app.',
+  backupUnreadable: 'Could not read that file.',
   empty: 'Nothing here yet',
 
   // steps

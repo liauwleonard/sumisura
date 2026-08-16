@@ -8,9 +8,13 @@ and iPhone, all three in sync. He can open any past order and see exactly what i
 If the app is shared with another tailor, neither can see the other's data.
 
 ## Status
-**Live at https://liauwleonard.github.io/sumisura/.** Phases 1, 2, 3a, 3b and 3d are done and
-verified on the deployed site, including a real magic-link login. Building 3c — the sync engine —
-which is the last thing standing between "three separate books" and "one book on three devices".
+**Live at https://liauwleonard.github.io/sumisura/.** Phases 1–3 complete and verified on the
+deployed site: local app, installable PWA, login, cross-device sync (confirmed Android →
+MacBook), and backup/export.
+
+Next is not code. Put it on the tailor's iPad and watch him work. Everything since Phase 1 rests
+on assumptions about how he actually measures and quotes; an hour of watching will correct more
+than any feature would add.
 
 ---
 
@@ -95,8 +99,8 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 - [x] Profile screen — shop name, account, sync status, language, units, sign out
 
 ## Phase 4 — Polish
-- [ ] Bahasa / English toggle, full dictionary
-- [ ] Export / import backup (JSON)
+- [x] Bahasa / English toggle, full dictionary (landed in Phase 1)
+- [x] Export / import backup (JSON), non-destructive restore
 - [ ] Customer merge tool for duplicates
 - [ ] Customer screen: measurement drift over time
 
