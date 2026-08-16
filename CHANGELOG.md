@@ -4,6 +4,16 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Workflow now enables Pages itself
+- Run #3 compiled successfully (the `src/data` fix worked) but failed at `configure-pages` with
+  `Get Pages site failed … Not Found` — no Pages site existed on the repo.
+- Added `enablement: true` to `actions/configure-pages`, so the workflow creates the Pages site
+  and sets its source to GitHub Actions rather than depending on a manual UI setting.
+  Requires the `pages: write` permission, which the workflow already declares.
+- Note for future reference: Pages **must** use the GitHub Actions source, not "deploy from a
+  branch". The workflow publishes a built artifact; a branch source would serve the raw repo,
+  whose root `index.html` points at `/src/main.tsx` and would not run.
+
 ### 2026-08-16 — Fixed CI build: three source files were never committed
 - **`src/data/` was being ignored by git.** The scaffold's `.gitignore` had an unanchored
   `data/` rule, which matches `data/` at *any* depth — so `src/data/measurements.ts`,
