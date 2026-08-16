@@ -50,9 +50,12 @@ const LOG_FIELD_KEYS: Record<string, keyof Dict> = {
 
 function logLabel(t: T, section: string, field: string) {
   if (section === 'measurement') return label(t, 'm_', field)
-  if (section === 'cut_style' && field.includes('.')) {
+  // Dotted keys are garment-scoped: "trousers.fit" from cut style, "jacket.price" from pricing.
+  if (field.includes('.')) {
     const [garment, option] = field.split('.')
-    return `${t(`garment_${garment}` as keyof Dict)} · ${label(t, 'c_', option)}`
+    const name = t(`garment_${garment}` as keyof Dict)
+    const suffix = option === 'price' ? t('price') : label(t, 'c_', option)
+    return `${name} · ${suffix}`
   }
   const key = LOG_FIELD_KEYS[field]
   return key ? t(key) : field

@@ -4,6 +4,25 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Per-garment pricing, discount, money formatting, customer sorting
+- **Prices per garment.** `OrderItem.price` is optional; the Balance tab lists each garment in
+  the order with its own price, then Subtotal → Discount → Total.
+- **Discount** (`Order.discount`) applies to the order, not to a garment.
+- `Order.price` stays the single stored total and the one source of truth for receivables,
+  revenue and sync. `recalculatedTotal()` re-derives it whenever an item price or the discount
+  changes — and **falls back to the existing total when no garment is priced**, so lump-sum
+  orders, including every order made before this existed, keep their value instead of silently
+  collapsing to zero. Orders with no garments still take a single total, as before.
+- **Thousand separators while typing** (`MoneyInput`): `5.000.000` in Indonesian, `5,000,000`
+  in English. Only digits are kept, so a separator can never end up in the stored number.
+- **Customers tab**: total value per customer beside the outstanding chip, and sorting by name,
+  phone, total value or receivable.
+- Change log records the discount and each garment's price; log labels handle garment-scoped
+  keys generically, so "jacket.price" reads as "Jacket · Total price".
+- Verified end to end: 5,000,000 + 2,500,000 + 1,500,000 → subtotal 9,000,000; discount
+  1,000,000 → total 8,000,000; deposit 3,000,000 → receivable 5,000,000, status Partial. Sorting
+  by value and by receivable both order correctly.
+
 ### 2026-08-16 — Phase 3c: the sync engine
 - `src/sync/mapping.ts` — camelCase ↔ snake_case translation in matched pairs. Isolated because
   a mistake here is silent: a misspelled column does not throw, the value just arrives as

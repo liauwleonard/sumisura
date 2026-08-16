@@ -1,24 +1,45 @@
-import { balanceOf, paidOf, paymentStatusOf, type Order, type Payment } from '../../types'
+import {
+  balanceOf,
+  itemsSubtotal,
+  paidOf,
+  paymentStatusOf,
+  recalculatedTotal,
+  type Order,
+  type OrderItem,
+  type Payment,
+} from '../../types'
 import { newId, now } from '../../db/db'
 import { formatDate, formatMoney, toDateInput, fromDateInput } from '../../lib/format'
 import { useSettings } from '../../i18n'
-import { Button, Card, Chip, Field, inputClass } from '../../components/ui'
+import { Button, Card, Chip, Field, MoneyInput, inputClass } from '../../components/ui'
 
 interface Props {
   order: Order
   onChange: (patch: Partial<Order>) => void
 }
 
-/** Deliberately dumb: total, deposits, auto receivable. No invoices, no tax, no reports. */
+/** Deliberately dumb: prices, a discount, deposits, auto receivable. No invoices, no tax. */
 export function BalanceStep({ order, onChange }: Props) {
   const { t, lang } = useSettings()
   const paid = paidOf(order)
   const receivable = balanceOf(order)
+  const subtotal = itemsSubtotal(order)
+  const priced = subtotal > 0
+  const status = paymentStatusOf(order)
 
-  const addPayment = () => {
-    const payment: Payment = { id: newId(), amount: 0, date: now() }
-    onChange({ payments: [...order.payments, payment] })
+  /** Any change to item prices or the discount re-derives the stored total in one place. */
+  const applyPricing = (patch: Partial<Order>) => {
+    const next = { ...order, ...patch }
+    onChange({ ...patch, price: recalculatedTotal(next) })
   }
+
+  const setItemPrice = (id: string, price: number) =>
+    applyPricing({
+      items: order.items.map((i: OrderItem) => (i.id === id ? { ...i, price } : i)),
+    })
+
+  const addPayment = () =>
+    onChange({ payments: [...order.payments, { id: newId(), amount: 0, date: now() }] })
 
   const setPayment = (id: string, patch: Partial<Payment>) =>
     onChange({ payments: order.payments.map((p) => (p.id === id ? { ...p, ...patch } : p)) })
@@ -26,21 +47,59 @@ export function BalanceStep({ order, onChange }: Props) {
   const removePayment = (id: string) =>
     onChange({ payments: order.payments.filter((p) => p.id !== id) })
 
-  const status = paymentStatusOf(order)
-
   return (
     <div className="space-y-4">
       <Card className="space-y-3">
-        <Field label={t('price')}>
-          <input
-            className={inputClass}
-            inputMode="numeric"
-            value={order.price || ''}
-            onChange={(e) => onChange({ price: Number(e.target.value) || 0 })}
-          />
-        </Field>
+        <div className="font-semibold">{t('pricing')}</div>
+
+        {order.items.length === 0 ? (
+          // No garments yet, so there is nothing to break down — take a lump sum.
+          <Field label={t('price')}>
+            <MoneyInput value={order.price} onChange={(price) => onChange({ price })} />
+          </Field>
+        ) : (
+          <>
+            {order.items.map((item) => (
+              <div key={item.id} className="flex items-center gap-3">
+                <span className="flex-1 text-sm text-stone-600">{t(`garment_${item.garment}`)}</span>
+                <MoneyInput
+                  className="w-40 text-right"
+                  value={item.price ?? 0}
+                  placeholder="0"
+                  onChange={(price) => setItemPrice(item.id, price)}
+                />
+              </div>
+            ))}
+
+            <div className="flex items-center justify-between border-t border-stone-200 pt-3 text-sm">
+              <span className="text-stone-600">{t('subtotal')}</span>
+              <span className="font-medium">{formatMoney(subtotal, lang)}</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="flex-1 text-sm text-stone-600">{t('discount')}</span>
+              <MoneyInput
+                className="w-40 text-right"
+                value={order.discount ?? 0}
+                placeholder="0"
+                onChange={(discount) => applyPricing({ discount })}
+              />
+            </div>
+          </>
+        )}
 
         <div className="flex items-center justify-between border-t border-stone-200 pt-3">
+          <span className="font-medium text-stone-700">{t('total')}</span>
+          <span className="text-lg font-semibold">{formatMoney(order.price, lang)}</span>
+        </div>
+
+        {priced && order.items.some((i) => (i.price ?? 0) === 0) && (
+          <p className="text-xs text-amber-700">{t('someItemsUnpriced')}</p>
+        )}
+      </Card>
+
+      <Card className="space-y-3">
+        <div className="flex items-center justify-between">
           <span className="text-sm text-stone-600">{t('deposit')}</span>
           <span className="font-medium">{formatMoney(paid, lang)}</span>
         </div>
@@ -66,11 +125,9 @@ export function BalanceStep({ order, onChange }: Props) {
           <div key={p.id} className="rounded-lg border border-stone-200 p-3">
             <div className="flex items-end gap-2">
               <Field label={t('amount')}>
-                <input
-                  className={inputClass}
-                  inputMode="numeric"
-                  value={p.amount || ''}
-                  onChange={(e) => setPayment(p.id, { amount: Number(e.target.value) || 0 })}
+                <MoneyInput
+                  value={p.amount}
+                  onChange={(amount) => setPayment(p.id, { amount })}
                 />
               </Field>
               <Field label={t('paymentDate')}>

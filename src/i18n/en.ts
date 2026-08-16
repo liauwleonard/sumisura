@@ -148,6 +148,17 @@ export const en = {
 
   // balance
   price: 'Total price',
+  pricing: 'Pricing',
+  subtotal: 'Subtotal',
+  discount: 'Discount',
+  total: 'Total',
+  someItemsUnpriced: 'Some garments have no price yet.',
+  lifetimeValue: 'Total value',
+  sortBy: 'Sort by',
+  sortName: 'Name',
+  sortPhone: 'Phone',
+  sortValue: 'Total value',
+  sortReceivable: 'Receivable',
   deposit: 'Deposit',
   addPayment: 'Add payment',
   receivable: 'Receivable',

@@ -53,6 +53,19 @@ export function diffOrder(before: Order | undefined, after: Order): Diff[] {
   }
 
   pushIfChanged(out, 'balance', 'price', before.price, after.price)
+  pushIfChanged(out, 'balance', 'discount', before.discount, after.discount)
+
+  // Per-garment prices are keyed by garment so a log line reads "jacket price: 0 -> 3500000".
+  const priceMap = (o: Order) => {
+    const m: Record<string, number> = {}
+    for (const item of o.items) if (item.price != null) m[`${item.garment}.price`] = item.price
+    return m
+  }
+  const beforePrices = priceMap(before)
+  const afterPrices = priceMap(after)
+  for (const key of new Set([...Object.keys(beforePrices), ...Object.keys(afterPrices)])) {
+    pushIfChanged(out, 'balance', key, beforePrices[key], afterPrices[key])
+  }
   // Summarised rather than totalled so an edited reference number is auditable too — that is
   // the whole point of recording one.
   const payments = (o: Order) =>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useSettings } from '../i18n'
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: ReactNode }) {
   return (
@@ -51,6 +52,38 @@ export function Button({
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * Money entry with thousand separators, so 5000000 is read as 5.000.000 while typing rather
+ * than counted digit by digit. Grouping follows the chosen language: "." in Indonesian,
+ * "," in English.
+ *
+ * Only digits are kept, so the separators the user sees can never end up in the stored number.
+ */
+export function MoneyInput({
+  value,
+  onChange,
+  className = '',
+  placeholder,
+}: {
+  value: number
+  onChange: (value: number) => void
+  className?: string
+  placeholder?: string
+}) {
+  const { lang } = useSettings()
+  const display = value ? new Intl.NumberFormat(lang === 'id' ? 'id-ID' : 'en-GB').format(value) : ''
+
+  return (
+    <input
+      className={`${inputClass} ${className}`}
+      inputMode="numeric"
+      value={display}
+      placeholder={placeholder}
+      onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)}
+    />
   )
 }
 

@@ -37,6 +37,8 @@ export interface OrderItem {
   garment: Garment
   /** cut-style option key -> chosen value. 'other' values are stored verbatim. */
   cutStyle: Record<string, string>
+  /** Price for this garment alone. Optional: a lump-sum order simply leaves them unset. */
+  price?: number
   notes?: string
 }
 
@@ -77,7 +79,15 @@ export interface Order {
   posture: string[]
   postureNotes?: string
   material: Material
+  /**
+   * The order total, and the single stored source of truth for money.
+   *
+   * When garments carry their own prices this is recomputed as subtotal − discount; when they
+   * do not, the tailor types it directly. Keeping one stored total means receivables, revenue
+   * and sync all keep working off one number rather than re-deriving it in four places.
+   */
   price: number
+  discount?: number
   payments: Payment[]
   dueDate?: number
   notes?: string
@@ -110,6 +120,23 @@ export interface ChangeLogEntry {
 }
 
 export const paidOf = (order: Order) => order.payments.reduce((sum, p) => sum + p.amount, 0)
+
+/** Sum of the per-garment prices. Zero means this order is priced as a lump sum. */
+export const itemsSubtotal = (order: Order) =>
+  order.items.reduce((sum, i) => sum + (i.price ?? 0), 0)
+
+/**
+ * What `price` should become after a change to item prices or the discount.
+ *
+ * Falls back to the existing total when no garment is priced, so an order entered as a lump
+ * sum — including every order made before per-item pricing existed — keeps its value instead
+ * of silently collapsing to zero.
+ */
+export function recalculatedTotal(order: Order): number {
+  const subtotal = itemsSubtotal(order)
+  if (subtotal <= 0) return order.price
+  return Math.max(0, subtotal - (order.discount ?? 0))
+}
 
 export const balanceOf = (order: Order) => order.price - paidOf(order)
 
