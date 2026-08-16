@@ -5,6 +5,7 @@ import { balanceOf, type Customer, type Order } from '../types'
 import { formatDate, formatMoney, normalize, phoneKey, whatsappNumber } from '../lib/format'
 import { plural, useSettings } from '../i18n'
 import { Card, Chip, inputClass } from '../components/ui'
+import { CustomerFields } from '../components/CustomerFields'
 
 /**
  * Browsing customers directly, rather than only stumbling across them while writing an order.
@@ -102,16 +103,9 @@ export function CustomersList({
                 </button>
 
                 {open && (
-                  <div className="mt-3 border-t border-stone-200 pt-3">
-                    {customer.address && (
-                      <p className="mb-1 text-sm text-stone-600">{customer.address}</p>
-                    )}
-                    {customer.notes && (
-                      <p className="mb-2 text-sm italic text-stone-500">{customer.notes}</p>
-                    )}
-
+                  <div className="mt-3 space-y-4 border-t border-stone-200 pt-3">
                     {customer.phone && (
-                      <div className="mb-3 flex gap-2">
+                      <div className="flex gap-2">
                         <a
                           href={`tel:${customer.phone}`}
                           className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm"
@@ -128,6 +122,11 @@ export function CustomersList({
                         </a>
                       </div>
                     )}
+
+                    {/* Same editable fields as inside an order — it is the same record. */}
+                    <CustomerFields customer={customer} />
+
+                    <div className="text-sm font-medium text-stone-600">{t('orders')}</div>
 
                     {theirOrders.length === 0 ? (
                       <p className="text-sm text-stone-500">{t('empty')}</p>

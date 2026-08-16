@@ -4,6 +4,16 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Customer details editable from the Customers tab
+- The Customers tab showed details read-only while the order flow let you edit them — the same
+  record behaving differently in two places. Extracted `src/components/CustomerFields.tsx` and
+  used it in both, so they cannot drift apart.
+- Edits from either place save immediately through `saveCustomer`, so they land in the change
+  log the same way.
+- Confirmed live-login works end to end: emailed link → session → shop resolved → renamed from
+  the Profile tab.
+- Verified by editing a phone from the Customers tab and reading the row back out of IndexedDB.
+
 ### 2026-08-16 — Phone input formatting, and a duplicate-customer bug it exposed
 - Phone fields now accept only digits and a leading `+`, and space themselves as you type:
   `+62 999 999 999`, and `0812 3456 7890` for local numbers (Indonesian convention groups

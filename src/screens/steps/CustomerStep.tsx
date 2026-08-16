@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, newId, nextCustomerCode, now } from '../../db/db'
-import { saveCustomer } from '../../db/changelog'
 import type { Customer, Order } from '../../types'
 import { formatPhone, normalize, phoneKey } from '../../lib/format'
 import { useSettings } from '../../i18n'
 import { Button, Card, Field, inputClass } from '../../components/ui'
+import { CustomerFields } from '../../components/CustomerFields'
 
 interface Props {
   order: Order
@@ -94,37 +94,8 @@ export function CustomerStep({ order, onPickCustomer, onChangeCustomer }: Props)
           </div>
         </Card>
 
-        <Card className="space-y-3">
-          <Field label={t('name')}>
-            <input
-              className={inputClass}
-              value={customer.name}
-              onChange={(e) => saveCustomer({ ...customer, name: e.target.value })}
-            />
-          </Field>
-          <Field label={t('phone')}>
-            <input
-              className={inputClass}
-              inputMode="tel"
-              value={customer.phone ?? ''}
-              onChange={(e) => saveCustomer({ ...customer, phone: formatPhone(e.target.value) })}
-            />
-          </Field>
-          <Field label={t('address')}>
-            <input
-              className={inputClass}
-              value={customer.address ?? ''}
-              onChange={(e) => saveCustomer({ ...customer, address: e.target.value })}
-            />
-          </Field>
-          <Field label={t('notes')}>
-            <textarea
-              className={inputClass}
-              rows={3}
-              value={customer.notes ?? ''}
-              onChange={(e) => saveCustomer({ ...customer, notes: e.target.value })}
-            />
-          </Field>
+        <Card>
+          <CustomerFields customer={customer} />
         </Card>
       </div>
     )
