@@ -11,8 +11,15 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   )
 }
 
-export const inputClass =
-  'w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+/**
+ * Everything except the width. Tailwind resolves conflicting width utilities by their order in
+ * the generated CSS, not by the order written on the element — so a `w-full` baked in here
+ * silently beat any `w-32` passed alongside it. Widths are set by the caller instead.
+ */
+export const inputBase =
+  'rounded-lg border border-stone-300 bg-white px-3 py-2.5 outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20'
+
+export const inputClass = `w-full ${inputBase}`
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -62,6 +69,12 @@ export function Button({
  *
  * Only digits are kept, so the separators the user sees can never end up in the stored number.
  */
+/**
+ * Ten digits — up to 9,999,999,999. No suit costs ten billion rupiah, and capping the length
+ * lets the field be sized to the longest number it can actually hold instead of guessing.
+ */
+const MAX_MONEY_DIGITS = 10
+
 export function MoneyInput({
   value,
   onChange,
@@ -78,11 +91,14 @@ export function MoneyInput({
 
   return (
     <input
-      className={`${inputClass} ${className}`}
+      className={`${inputBase} ${className}`}
       inputMode="numeric"
       value={display}
       placeholder={placeholder}
-      onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)}
+      onChange={(e) => {
+        const digits = e.target.value.replace(/\D/g, '').slice(0, MAX_MONEY_DIGITS)
+        onChange(Number(digits) || 0)
+      }}
     />
   )
 }

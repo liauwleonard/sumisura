@@ -13,20 +13,24 @@ import {
 import { newId, now } from '../../db/db'
 import { formatDate, formatMoney, toDateInput, fromDateInput } from '../../lib/format'
 import { useSettings } from '../../i18n'
-import { Button, Card, Chip, Field, MoneyInput, inputClass } from '../../components/ui'
+import { Button, Card, Chip, Field, MoneyInput, inputBase, inputClass } from '../../components/ui'
 
 interface Props {
   order: Order
   onChange: (patch: Partial<Order>) => void
 }
 
-/** One width for every money field, so the column lines up down the card. */
-const MONEY_FIELD = 'w-36 text-right'
+/**
+ * One width for every money field, measured against the longest value it can hold —
+ * "9.999.999.999" needs 137px including padding and borders, so 144px (w-36) fits it without
+ * clipping. tabular-nums keeps digits equal width so amounts line up as a column.
+ */
+const MONEY_FIELD = 'w-36 text-right tabular-nums'
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-sm text-stone-600">{label}</span>
+    <div className="flex items-center justify-between gap-2">
+      <span className="min-w-0 truncate text-sm text-stone-600">{label}</span>
       {children}
     </div>
   )
@@ -91,14 +95,15 @@ export function BalanceStep({ order, onChange }: Props) {
             </div>
 
             <Row label={t('discount')}>
-              <div className="flex items-center gap-2">
-                {/* Percent and rupiah share one stored value; the type decides how to read it. */}
-                <div className="flex overflow-hidden rounded-lg border border-stone-300">
+              <div className="flex shrink-0 items-center gap-2">
+                {/* Percent and rupiah share one stored value; the type decides how to read it.
+                    Fixed-width segments so neither label crops. */}
+                <div className="flex shrink-0 overflow-hidden rounded-lg border border-stone-300">
                   {(['amount', 'percent'] as DiscountType[]).map((type) => (
                     <button
                       key={type}
                       onClick={() => applyPricing({ discountType: type })}
-                      className={`px-2.5 py-2 text-sm ${
+                      className={`w-9 py-1.5 text-center text-xs font-medium ${
                         discountType === type ? 'bg-amber-700 text-white' : 'bg-white text-stone-600'
                       }`}
                     >
@@ -108,7 +113,7 @@ export function BalanceStep({ order, onChange }: Props) {
                 </div>
                 {discountType === 'percent' ? (
                   <input
-                    className={`${inputClass} ${MONEY_FIELD}`}
+                    className={`${inputBase} ${MONEY_FIELD}`}
                     inputMode="numeric"
                     placeholder="0"
                     value={order.discount || ''}

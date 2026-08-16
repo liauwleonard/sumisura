@@ -68,7 +68,7 @@ interface Props {
 }
 
 export function OrderEditor({ shopId, orderId, onClose }: Props) {
-  const { t, lang } = useSettings()
+  const { t } = useSettings()
   const [draft, setDraft] = useState<Order | null>(null)
   const [step, setStep] = useState<Step>('customer')
   const [dirty, setDirty] = useState(false)
@@ -276,18 +276,7 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
           </button>
           {showLog &&
             (log && log.length > 0 ? (
-              <ul className="mt-3 space-y-2">
-                {log.map((e) => (
-                  <li key={e.id} className="text-sm">
-                    <span className="text-stone-500">{formatDate(e.at, lang)} · </span>
-                    <span className="font-medium">{logLabel(t, e.section, e.field)}</span>
-                    {': '}
-                    <span className="text-stone-400 line-through">{e.oldValue ?? '—'}</span>
-                    {' → '}
-                    <span className="font-medium">{e.newValue ?? '—'}</span>
-                  </li>
-                ))}
-              </ul>
+              <ChangeLogColumns entries={log} />
             ) : (
               <p className="mt-3 text-sm text-stone-500">{t('noHistory')}</p>
             ))}
@@ -331,5 +320,54 @@ function GarmentPicker({
         ))}
       </div>
     </Card>
+  )
+}
+
+/** Which column a change belongs in — mirrors the step tabs, so the grouping is already familiar. */
+const COLUMNS = [
+  { key: 'step_measurement', sections: ['measurement'] },
+  { key: 'step_material', sections: ['material', 'cut_style'] },
+  { key: 'step_balance', sections: ['balance'] },
+  { key: 'other', sections: ['status', 'order', 'customer'] },
+] as const
+
+/**
+ * The log grouped into columns by section rather than one long mixed list: scanning "what
+ * changed about the measurements" should not mean reading past every price edit.
+ */
+function ChangeLogColumns({ entries }: { entries: ChangeLogEntry[] }) {
+  const { t, lang } = useSettings()
+
+  const columns = COLUMNS.map((col) => ({
+    title: t(col.key as keyof Dict),
+    entries: entries.filter((e) => (col.sections as readonly string[]).includes(e.section)),
+  })).filter((col) => col.entries.length > 0)
+
+  return (
+    <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {columns.map((col) => (
+        <div key={col.title} className="min-w-0">
+          <div className="mb-2 border-b border-stone-200 pb-1 text-sm font-medium text-stone-700">
+            {col.title} ({col.entries.length})
+          </div>
+          <ul className="space-y-2">
+            {col.entries.map((e) => (
+              <li key={e.id} className="text-sm">
+                <div className="font-medium text-stone-800">
+                  {logLabel(t, e.section, e.field)}
+                </div>
+                <div className="text-stone-600">
+                  <span className="text-stone-400 line-through">{e.oldValue ?? '—'}</span>
+                  {' → '}
+                  <span className="font-medium">{e.newValue ?? '—'}</span>
+                </div>
+                <div className="text-xs text-stone-400">{formatDate(e.at, lang)}</div>
+                {e.reason && <div className="text-xs italic text-stone-500">“{e.reason}”</div>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   )
 }

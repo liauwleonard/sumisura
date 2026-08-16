@@ -4,6 +4,25 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-17 — Balance layout, and the Tailwind bug behind it
+- **Found why the price field looked oversized: it was.** `inputClass` carried `w-full`, and
+  Tailwind resolves conflicting width utilities by their order in the generated CSS, not by the
+  order written on the element — so the `w-36` passed alongside it was silently ignored and the
+  field rendered at **910px**. The earlier "uniform width" change had never taken effect. Split
+  `inputBase` (no width) from `inputClass` (`w-full` + base); callers now set their own width.
+  The same conflict was swallowing a `px-2`.
+- Money fields are now all 144px — measured against the longest value they can hold,
+  "9.999.999.999" at 137px including padding and borders, so the maximum never clips.
+- **Money input capped at 10 digits** (9,999,999,999). Nobody buys a suit for ten billion
+  rupiah, and a fixed cap is what lets the field be sized to fit rather than guessed at.
+- `tabular-nums` on money fields so digits are equal width and amounts line up as a column.
+- **Rp / % toggle no longer crops**: fixed-width segments, and the row label is allowed to
+  truncate so the controls are never squeezed.
+- **Change log is grouped into columns by section** — Measurement · Material & Cut · Balance ·
+  Other — instead of one mixed list. The column titles reuse the step-tab labels, so the
+  grouping matches the tabs already in use. Verified with edits across three sections: each
+  landed in its own column with a count in the header.
+
 ### 2026-08-16 — Backup and restore
 - **Export** writes a plain-JSON file of the whole shop — customers, orders and the change log —
   named `sumisura-<shop>-<date>.json`. Plain JSON on purpose: readable, diffable, and openable
