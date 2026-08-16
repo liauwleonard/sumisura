@@ -8,9 +8,9 @@ and iPhone, all three in sync. He can open any past order and see exactly what i
 If the app is shared with another tailor, neither can see the other's data.
 
 ## Status
-**Phase 2 complete — live at https://liauwleonard.github.io/sumisura/** (2026-08-16), verified
-end to end on the deployed site. Next: put it on the tailor's iPad and watch him use it before
-starting Phase 3 (sync).
+**Live at https://liauwleonard.github.io/sumisura/.** Phases 1, 2, 3a, 3b and 3d are done and
+verified on the deployed site, including a real magic-link login. Building 3c — the sync engine —
+which is the last thing standing between "three separate books" and "one book on three devices".
 
 ---
 
@@ -48,36 +48,42 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 - [x] Update prompt instead of silent auto-reload (would discard unsaved measurements)
 - [x] GitHub Actions Pages workflow (`.github/workflows/deploy.yml`)
 - [x] Bilingual install guide (`INSTALL.md`)
-- [ ] **Create the GitHub repo and push** — needs Leonard; repo must be public for free Pages
-- [ ] Replace the placeholder URL in `INSTALL.md` with the real Pages address
+- [x] GitHub repo created and pushed (public, required for free Pages)
+- [x] Real Pages URL in `INSTALL.md`
+- [x] Pages source set to **GitHub Actions** — a branch source publishes the raw repo and
+      silently overwrites the built site
 - [ ] Add screenshots to the install guide once the app is live on a real device
 - [ ] **Put it in the tailor's hands and watch him use it** before building Phase 3
 
 ## Phase 3 — Sync + multi-user
 
-### 3a — Supabase project (Leonard)
-- [x] `supabase/schema.sql` drafted — tables, RLS, new-user trigger
-- [x] `supabase/SETUP.md` drafted — steps, isolation test, free-tier limits
-- [ ] Create the project (region: Singapore) and run `schema.sql`
-- [ ] Turn **off** public sign-ups; create the tailor's account from the dashboard
-- [ ] Fill `.env` from `.env.example`
-- [ ] Add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as GitHub repo secrets
+### 3a — Supabase project (Leonard) ✅
+- [x] `supabase/schema.sql` — tables, RLS, new-user trigger
+- [x] `supabase/SETUP.md` — steps, isolation test, free-tier limits
+- [x] Project created (Tokyo — auto-assigned; ~50 ms further than Singapore, irrelevant to a
+      background sync) and `schema.sql` run
+- [x] Public sign-ups off; users created from the dashboard
+- [x] `.env` filled locally
+- [x] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as GitHub **repository** secrets
+      (Actions → Repository secrets — not Environment, not Codespaces)
 
-### 3b — Login ✅ built, awaiting live credentials
+### 3b — Login ✅
 - [x] `@supabase/supabase-js`, client that no-ops when unconfigured
 - [x] `AuthProvider` — session restore, silent refresh, sign out
 - [x] Magic-link sign-in screen, bilingual
 - [x] Gate: local-only when unconfigured, sign-in required when configured
 - [x] Sign-out and "local device only" state in Settings
-- [ ] **Verify a real magic link round-trip** — needs 3a
+- [x] **Verified a real magic link round-trip** on the live site
 
 ### 3c — Sync engine
 - [x] Resolve the real `shop_id` from membership after login (`ShopProvider`)
 - [x] Shop name in the header + renameable in Profile
-- [ ] Push: local rows with `updated_at` newer than last sync
-- [ ] Pull: "everything in my shop changed since X", last-write-wins
-- [ ] Offline queue; retry on reconnect
-- [ ] Sync status indicator (Profile currently shows "Not enabled yet")
+- [x] Push: local rows newer than the watermark; watermark advances to the newest row sent
+- [x] Pull: changed-since query, last-write-wins, with a 60 s clock-skew overlap
+- [x] Retry on interval, tab focus and network return; no stacked runs
+- [x] Sync status + manual "Sync now" in Profile
+- [x] Column mappings validated against the live schema; RLS proven to reject anonymous writes
+- [ ] **Two-device round-trip** — needs Leonard, on two signed-in devices
 
 ### 3d — Claim existing local data ✅
 - [x] On sign-in, re-stamp local rows onto the real shop

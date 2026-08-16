@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useShop } from '../shop/ShopProvider'
 import { useSettings, type Lang, type Unit } from '../i18n'
 import { Button, Card, Chip, Field, inputClass } from '../components/ui'
+import { SyncStatus } from '../components/SyncStatus'
 
 /** Who am I, whose shop is this, and is it the right account — checkable at a glance. */
 export function Profile() {
@@ -34,7 +35,10 @@ export function Profile() {
           <>
             <Row label={t('email')} value={session.user.email ?? '—'} />
             {role && <Row label={t('role')} value={role} />}
-            <Row label={t('syncStatus')} value={t('syncNotYet')} />
+            <div className="border-t border-stone-200 pt-3">
+              <div className="mb-2 text-sm text-stone-500">{t('syncStatus')}</div>
+              <SyncStatus />
+            </div>
             <div className="pt-2">
               <Button onClick={signOut}>{t('signOut')}</Button>
             </div>

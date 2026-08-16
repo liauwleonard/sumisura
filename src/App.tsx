@@ -8,6 +8,7 @@ import { Button } from './components/ui'
 import { UpdatePrompt } from './components/UpdatePrompt'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import { ShopProvider, useShop } from './shop/ShopProvider'
+import { SyncProvider } from './sync/SyncProvider'
 import { SignIn } from './screens/SignIn'
 
 type Screen =
@@ -46,7 +47,9 @@ export default function App() {
     <SettingsContext.Provider value={settings}>
       <AuthProvider>
         <ShopProvider>
-          <Gate />
+          <SyncProvider>
+            <Gate />
+          </SyncProvider>
         </ShopProvider>
       </AuthProvider>
     </SettingsContext.Provider>

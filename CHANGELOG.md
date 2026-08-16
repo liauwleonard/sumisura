@@ -4,6 +4,34 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Phase 3c: the sync engine
+- `src/sync/mapping.ts` — camelCase ↔ snake_case translation in matched pairs. Isolated because
+  a mistake here is silent: a misspelled column does not throw, the value just arrives as
+  `undefined` and a measurement quietly disappears.
+- `src/sync/sync.ts` — push then pull, per shop.
+  - **Push** sends rows whose `updatedAt` is newer than the watermark. The watermark advances to
+    the newest row actually sent, not to "now", so a row edited mid-request is caught next pass.
+  - **Pull** fetches rows changed since the watermark and merges last-write-wins: an incoming
+    row only replaces a local one if it is genuinely newer.
+  - Pulls reach back **60 s before** the watermark. Device clocks are not aligned, and a row
+    written a few seconds "in the past" by another device would otherwise be skipped forever.
+    Re-applying a row is harmless — the merge is idempotent.
+  - The change log uses its own watermark and `ignoreDuplicates`, which becomes
+    `INSERT … ON CONFLICT DO NOTHING` and needs only the insert policy. The schema grants
+    `change_log` no update policy at all, so an ordinary upsert would fail.
+- `src/sync/SyncProvider.tsx` decides *when*: on sign-in, every 60 s, on tab focus, and when the
+  network returns. The last two matter most in a shop, where the iPad sleeps between customers.
+  A run in flight blocks another from stacking behind the interval.
+- `src/components/SyncStatus.tsx` in Profile: state, "last synced N min ago", and a manual
+  "Sync now". Offline is shown as a state, not an error — the local copy is still correct.
+- **Verified against the live Supabase project**: every column in all three mappings accepted
+  by the real schema (a deliberately wrong column returns `PGRST204`; the real payloads reach
+  the security check instead). Those same probes proved **RLS is genuinely enforced** — each
+  unauthenticated write was rejected with `42501 new row violates row-level security policy`,
+  which the earlier empty-table reads could not establish.
+- Signed-out behaviour verified: sync stays `off`, writes no watermarks, logs no errors.
+- **Not yet verified: a real two-device round-trip.** That needs a live session on two devices.
+
 ### 2026-08-16 — Customer details editable from the Customers tab
 - The Customers tab showed details read-only while the order flow let you edit them — the same
   record behaving differently in two places. Extracted `src/components/CustomerFields.tsx` and
@@ -48,8 +76,8 @@ All notable changes to this project. Newest first.
 - Counts are pluralised properly ("1 order", not "1 orders"); the Indonesian forms are
   deliberately identical since it does not inflect for number.
 - Verified in local-only mode with seeded data: header name, rename (header and avatar initial
-  both update), Customers list and expansion, Profile. The signed-in path is unverified —
-  it needs a live session.
+  both update), Customers list and expansion, Profile. The signed-in path was confirmed
+  afterwards on the live site: emailed link → session → shop resolved → renamed from Profile.
 
 ### 2026-08-16 — Docs: new Supabase key names, region guidance
 - Supabase renamed its API keys: **publishable** (`sb_publishable_...`) is what older docs call
