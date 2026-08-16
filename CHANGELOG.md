@@ -4,6 +4,21 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-08-16 — Phone input formatting, and a duplicate-customer bug it exposed
+- Phone fields now accept only digits and a leading `+`, and space themselves as you type:
+  `+62 999 999 999`, and `0812 3456 7890` for local numbers (Indonesian convention groups
+  those in fours, not threes).
+- **Fixed: `+62 812 345 678` and `0812 345 678` were treated as different people.** Duplicate
+  detection compared raw digits, so the same customer entered in the two common Indonesian
+  formats would slip through as two records — precisely the failure this app exists to prevent.
+  `phoneKey()` now reduces both to one canonical form before comparing, and search uses it too.
+- Guarded phone search against empty digit keys: `''.includes('')` is true, so searching a name
+  would otherwise have matched every customer in the book.
+- WhatsApp links go through the same canonical form instead of a hand-rolled prefix swap.
+- Verified in the browser: typing `0812abc34567890` yields `0812 3456 7890`, and saving a
+  customer as `0999 9999 99` when `+62 999 999 999` exists now raises
+  "This number already belongs to Phone Test. Same person?".
+
 ### 2026-08-16 — Shop identity in the header, Customers tab, Profile screen
 - **`ShopProvider`** works out whose shop this is: the account's shop read from Supabase when
   signed in, the on-device shop otherwise. If a signed-in user somehow belongs to no shop it

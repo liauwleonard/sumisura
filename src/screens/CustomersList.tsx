@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { balanceOf, type Customer, type Order } from '../types'
-import { formatDate, formatMoney, normalize, normalizePhone } from '../lib/format'
+import { formatDate, formatMoney, normalize, phoneKey, whatsappNumber } from '../lib/format'
 import { plural, useSettings } from '../i18n'
 import { Card, Chip, inputClass } from '../components/ui'
 
@@ -47,9 +47,13 @@ export function CustomersList({
   }
 
   const q = normalize(query)
+  // Same guard as the order flow: an empty digit key would match every customer.
+  const digits = phoneKey(query)
   const visible = customers.filter(
     (c) =>
-      q === '' || normalize(c.name).includes(q) || normalizePhone(c.phone).includes(q.replace(/\D/g, '')),
+      q === '' ||
+      normalize(c.name).includes(q) ||
+      (digits.length >= 3 && phoneKey(c.phone).includes(digits)),
   )
 
   return (
@@ -115,7 +119,7 @@ export function CustomersList({
                           {t('call')}
                         </a>
                         <a
-                          href={`https://wa.me/${normalizePhone(customer.phone).replace(/^0/, '62')}`}
+                          href={`https://wa.me/${whatsappNumber(customer.phone)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm"

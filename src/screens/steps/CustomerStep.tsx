@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, newId, nextCustomerCode, now } from '../../db/db'
 import { saveCustomer } from '../../db/changelog'
 import type { Customer, Order } from '../../types'
-import { normalize, normalizePhone } from '../../lib/format'
+import { formatPhone, normalize, phoneKey } from '../../lib/format'
 import { useSettings } from '../../i18n'
 import { Button, Card, Field, inputClass } from '../../components/ui'
 
@@ -32,10 +32,17 @@ export function CustomerStep({ order, onPickCustomer, onChangeCustomer }: Props)
   const matches = useLiveQuery(async () => {
     const q = normalize(query)
     if (q.length < 1) return []
+    // Only match on phone when the query actually contains digits — an empty key would make
+    // `includes()` true for everyone and every name search would return the whole book.
+    const digits = phoneKey(query)
     const all = await db.customers.where('shopId').equals(order.shopId).toArray()
     return all
       .filter((c) => !c.deletedAt)
-      .filter((c) => normalize(c.name).includes(q) || normalizePhone(c.phone).includes(q))
+      .filter(
+        (c) =>
+          normalize(c.name).includes(q) ||
+          (digits.length >= 3 && phoneKey(c.phone).includes(digits)),
+      )
       .slice(0, 8)
   }, [query, order.shopId], [])
 
@@ -44,7 +51,7 @@ export function CustomerStep({ order, onPickCustomer, onChangeCustomer }: Props)
     if (phone) {
       const all = await db.customers.where('shopId').equals(order.shopId).toArray()
       const clash = all.find(
-        (c) => !c.deletedAt && normalizePhone(c.phone) === normalizePhone(phone),
+        (c) => !c.deletedAt && phoneKey(c.phone) === phoneKey(phone),
       )
       if (clash) {
         setPhoneClash(clash)
@@ -100,7 +107,7 @@ export function CustomerStep({ order, onPickCustomer, onChangeCustomer }: Props)
               className={inputClass}
               inputMode="tel"
               value={customer.phone ?? ''}
-              onChange={(e) => saveCustomer({ ...customer, phone: e.target.value })}
+              onChange={(e) => saveCustomer({ ...customer, phone: formatPhone(e.target.value) })}
             />
           </Field>
           <Field label={t('address')}>
@@ -141,7 +148,7 @@ export function CustomerStep({ order, onPickCustomer, onChangeCustomer }: Props)
             inputMode="tel"
             value={draft.phone}
             onChange={(e) => {
-              setDraft({ ...draft, phone: e.target.value })
+              setDraft({ ...draft, phone: formatPhone(e.target.value) })
               setPhoneClash(null)
             }}
           />
