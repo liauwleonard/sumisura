@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider'
 interface ShopDetails {
   name: string
   address?: string
+  phone?: string
   bankName?: string
   bankAccount?: string
   bankHolder?: string
@@ -60,7 +61,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from('shop_members')
-        .select('role, shop_id, shops(name, address, bank_name, bank_account, bank_holder)')
+        .select('role, shop_id, shops(name, address, phone, bank_name, bank_account, bank_holder)')
         .limit(1)
         .maybeSingle()
 
@@ -88,6 +89,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       setDetails({
         name: row?.name ?? 'My Shop',
         address: row?.address ?? undefined,
+        phone: row?.phone ?? undefined,
         bankName: row?.bank_name ?? undefined,
         bankAccount: row?.bank_account ?? undefined,
         bankHolder: row?.bank_holder ?? undefined,
@@ -113,6 +115,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         .update({
           name: next.name,
           address: next.address ?? null,
+          phone: next.phone ?? null,
           bank_name: next.bankName ?? null,
           bank_account: next.bankAccount ?? null,
           bank_holder: next.bankHolder ?? null,
@@ -133,12 +136,14 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 const fromLocal = (shop: {
   name: string
   address?: string
+  phone?: string
   bankName?: string
   bankAccount?: string
   bankHolder?: string
 }): ShopDetails => ({
   name: shop.name,
   address: shop.address,
+  phone: shop.phone,
   bankName: shop.bankName,
   bankAccount: shop.bankAccount,
   bankHolder: shop.bankHolder,

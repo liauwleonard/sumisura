@@ -226,3 +226,4 @@ alter table public.shops add column if not exists address      text;
 alter table public.shops add column if not exists bank_name    text;
 alter table public.shops add column if not exists bank_account text;
 alter table public.shops add column if not exists bank_holder  text;
+alter table public.shops add column if not exists phone        text;

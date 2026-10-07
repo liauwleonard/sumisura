@@ -4,6 +4,35 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-07 — Material per garment, printable invoice
+- **Material moved from the order to each garment.** The cut was already per item; the cloth was
+  not, so a suit could not describe a wool blazer with trousers in a different weight. Each
+  garment card on Material & Cut now carries its own fabric, colour, meters, lining and notes.
+  The order-level `material` is gone; the Postgres column stays and is written empty, since
+  cloth now rides inside `items`.
+- Change-log entries for material are keyed per garment, so a line reads
+  "Blazer · Fabric: — → Wool Super 120s".
+- **Shop phone added** — the invoice footer needed it and nothing stored it. New `phone` column
+  on `shops`, alongside the address and bank columns.
+- **Invoice** (`src/screens/Invoice.tsx`), reachable from the order header once the order is
+  saved. Shop name as a wordmark, "INVOICE" with order number and date, customer name and
+  phone, a table of garments with their material and cut beneath each, accessories, the total,
+  then bank details and phone bottom-left and the address bottom-right.
+  - **No balance due and no collection date** — Leonard's call. The sheet is printed at the
+    first meeting, before money moves; the amounts still live on the order.
+  - **No measurements.** It says what was ordered, not how it will be cut.
+  - **Meters are left off**, though still recorded: the customer is buying a garment, not a
+    length of cloth.
+  - Printing goes through the browser, so paper and "Save as PDF" are one action, and the PDF
+    is what gets shared on WhatsApp. `@media print` sets A4 with 14 mm margins, hides anything
+    marked `print-hide`, and keeps table rows from splitting across sheets.
+- **Fixed, pre-existing:** Invoice and Delete were gated on the `orderId` prop, so neither
+  appeared on an order created and saved in the same sitting — only after reopening it from the
+  list. They now follow whether the order is actually in the database.
+- Unnamed accessories read as "Accessories" on the Balance tab rather than the field label "Name".
+- Elbow considered for the sleeve and rejected: the tailor confirmed he does not use it, and
+  bicep plus wrist already set the taper.
+
 ### 2026-10-07 — Tailor's vocabulary, separate measurements per garment, accessories
 Driven by the tailor's feedback after real use. No data migration: still in testing, so stored
 keys were renamed properly rather than carrying a label/key mismatch forever.

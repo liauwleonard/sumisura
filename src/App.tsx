@@ -3,6 +3,7 @@ import { OrdersList } from './screens/OrdersList'
 import { OrderEditor } from './screens/OrderEditor'
 import { CustomersList } from './screens/CustomersList'
 import { Profile } from './screens/Profile'
+import { Invoice } from './screens/Invoice'
 import { DEFAULT_LANG, SettingsContext, makeT, useSettings, type Lang, type Unit } from './i18n'
 import { Button } from './components/ui'
 import { UpdatePrompt } from './components/UpdatePrompt'
@@ -16,6 +17,7 @@ type Screen =
   | { name: 'customers' }
   | { name: 'profile' }
   | { name: 'order'; id: string | null }
+  | { name: 'invoice'; id: string }
 
 const read = <T,>(key: string, fallback: T): T =>
   (localStorage.getItem(key) as T | null) ?? fallback
@@ -84,7 +86,7 @@ function Shell() {
       <UpdatePrompt />
       <div className="min-h-full">
         {screen.name !== 'order' && (
-          <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-100/90 backdrop-blur">
+          <header className="print-hide sticky top-0 z-10 border-b border-stone-200 bg-stone-100/90 backdrop-blur">
             <div className="mx-auto flex max-w-3xl items-center gap-2 p-4">
               <div className="min-w-0">
                 {/* The shop name, not the product name: at a glance you know which account
@@ -143,7 +145,12 @@ function Shell() {
             shopId={shopId}
             orderId={screen.id}
             onClose={() => setScreen({ name: 'orders' })}
+            onInvoice={(id) => setScreen({ name: 'invoice', id })}
           />
+        )}
+
+        {screen.name === 'invoice' && (
+          <Invoice orderId={screen.id} onClose={() => setScreen({ name: 'order', id: screen.id })} />
         )}
       </div>
     </>

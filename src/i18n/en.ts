@@ -174,6 +174,15 @@ export const en = {
 
   // balance
   price: 'Total price',
+  invoice: 'Invoice',
+  printInvoice: 'Print / Save PDF',
+  invoiceFor: 'For',
+  invoiceDate: 'Date',
+  invoiceNo: 'Order no.',
+  invoiceItem: 'Item',
+  invoiceDetail: 'Detail',
+  invoiceAmount: 'Amount',
+  payTo: 'Payment to',
   pricing: 'Pricing',
   subtotal: 'Subtotal',
   discount: 'Discount',

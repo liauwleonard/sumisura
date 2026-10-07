@@ -52,7 +52,8 @@ export const orderToRow = (o: Order): Row => ({
   measurement_source: o.measurementSource,
   posture: o.posture,
   posture_notes: o.postureNotes ?? null,
-  material: o.material,
+  // Kept so the existing column stays satisfied; cloth now rides inside `items`.
+  material: {},
   price: o.price,
   payments: o.payments,
   due_date: o.dueDate ?? null,
@@ -74,7 +75,6 @@ export const rowToOrder = (r: Row): Order => ({
   measurementSource: (r.measurement_source as Order['measurementSource']) ?? {},
   posture: (r.posture as string[]) ?? [],
   postureNotes: (r.posture_notes as string) ?? undefined,
-  material: (r.material as Order['material']) ?? {},
   price: Number(r.price) || 0,
   payments: (r.payments as Order['payments']) ?? [],
   dueDate: r.due_date == null ? undefined : Number(r.due_date),

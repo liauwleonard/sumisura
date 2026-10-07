@@ -98,7 +98,8 @@ export function BalanceStep({ order, onChange }: Props) {
             {accessories.map((a) => (
               <Row
                 key={a.id}
-                label={`${a.name || t('accessoryName')}${(a.qty ?? 1) > 1 ? ` ×${a.qty}` : ''}`}
+                // Unnamed accessories fall back to the section word, not the field label "Name".
+                label={`${a.name || t('accessories')}${(a.qty ?? 1) > 1 ? ` ×${a.qty}` : ''}`}
               >
                 <MoneyInput
                   className={MONEY_FIELD}

@@ -35,8 +35,21 @@ export function diffOrder(before: Order | undefined, after: Order): Diff[] {
     pushIfChanged(out, 'measurement', key, before.measurements[key], after.measurements[key])
   }
 
-  for (const key of ['fabric', 'color', 'meters', 'lining', 'notes'] as const) {
-    pushIfChanged(out, 'material', key, before.material[key], after.material[key])
+  // Material is per garment now, so it is keyed the same way as cut style:
+  // a log line reads "Blazer · Fabric: — → Wool Super 120s".
+  const materialMap = (o: Order) => {
+    const m: Record<string, string> = {}
+    for (const item of o.items) {
+      for (const [k, v] of Object.entries(item.material ?? {})) {
+        if (v !== undefined && v !== null && v !== '') m[`${item.garment}.${k}`] = String(v)
+      }
+    }
+    return m
+  }
+  const beforeMaterial = materialMap(before)
+  const afterMaterial = materialMap(after)
+  for (const key of new Set([...Object.keys(beforeMaterial), ...Object.keys(afterMaterial)])) {
+    pushIfChanged(out, 'material', key, beforeMaterial[key], afterMaterial[key])
   }
 
   // Cut style is keyed by garment so a log line reads "trousers.fit: regular → slim".

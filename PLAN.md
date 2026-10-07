@@ -101,7 +101,8 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 ## Phase 4 — Polish
 - [x] Bahasa / English toggle, full dictionary (landed in Phase 1)
 - [x] Export / import backup (JSON), non-destructive restore
-- [ ] Customer merge tool for duplicates
+- [x] ~~Customer merge tool~~ — dropped. Search-or-create already prevents duplicates at the
+      point they would be made; revisit only if they start appearing.
 - [ ] Customer screen: measurement drift over time
 
 ---
@@ -110,40 +111,39 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 
 His actual vocabulary and workflow, after using it. Grouped by risk.
 
-### 5a — Labels only, nothing stored changes
-- [ ] `jacket` → **Blazer**, `waistcoat` → **Vest** — i18n only. The stored garment keys stay
+### 5a — Labels and keys ✅
+- [x] `jacket` → **Blazer**, `waistcoat` → **Vest** — i18n only. The stored garment keys stay
       `jacket` / `waistcoat`, because changing them would orphan every existing order's items.
-- [ ] `sleeve_length` → **Arm Length**. Key unchanged, same reason.
+- [x] `sleeve_length` → **Arm Length**. Key unchanged, same reason.
 
-### 5b — Field list
-- [ ] Remove `neck` from Blazer. Keep it on Shirt.
+### 5b — Field list ✅
+- [x] Remove `neck` from Blazer. Keep it on Shirt.
       Values already recorded under the blazer stop being shown; they are not deleted.
 
-### 5c — Separate measurements per garment  ← the risky one
+### 5c — Separate measurements per garment ✅
 Today `measurements` is one flat map, so Blazer chest and Shirt chest are literally the same
 stored number. The tailor wants them independent.
 
-- [ ] Re-key to `jacket.chest`, `shirt.chest`, `trousers.thigh`, …
-- [ ] One-time migration: for each order, copy each flat value into every garment on that order,
-      so nothing is lost and both garments start from what was already measured.
-- [ ] **Flat keys are kept, not deleted.** Until the tailor taps Update on his iPad, that device
-      runs the old code — which reads flat keys. Deleting them would blank his measurements.
-- [ ] Reads fall back to the flat key when a namespaced one is missing.
+- [x] Re-key to `jacket.chest`, `shirt.chest`, `trousers.thigh`, …
+- [x] No migration written: still in testing, so old test orders are simply discarded. That is
+      also why the stored garment keys could be renamed outright rather than kept forever.
 
-### 5d — Status
-- [ ] Add `final_fitting` between `fitting` and `finishing` — that is where it happens.
+### 5d — Status ✅
+- [x] Add `final_fitting` between `fitting` and `finishing` — that is where it happens.
 
-### 5e — Accessories
-- [ ] New section in Measurement, with a Name input. **Shape not yet decided** — see question
-      in the 2026-10-07 session.
+### 5e — Accessories ✅
+- [x] Name, size (free text), material, quantity, notes, price. Priced on Balance.
+      Unnamed rows show as "Accessories" there. Elbow considered and rejected — the tailor
+      confirmed he does not use it.
 
-### 5f — Shop profile
-- [ ] Address, bank name, account number, account holder.
-- [ ] Supabase migration adding those columns to `shops` — Leonard runs it, as with `schema.sql`.
-- [ ] Fields on the Profile screen.
+### 5f — Shop profile ✅ (needs the SQL run)
+- [x] Address, bank name, account number, account holder.
+- [ ] **Supabase migration — Leonard runs it.** Four `alter table` lines at the end of
+      `supabase/schema.sql`. Must happen before deploy or the bank fields silently do not save.
+- [x] Fields on the Profile screen.
 
 ### Deferred, by Leonard's call
-- Invoice per order.
+- [x] Invoice per order — printable, shared as PDF over WhatsApp.
 - Replace the mannequin with a garment-specific image: pick Blazer, see a blazer, with its own
   measurement lines. Bigger job — it means a drawing and a line set per garment.
 

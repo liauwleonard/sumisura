@@ -19,6 +19,7 @@ export interface Shop {
   name: string
   address?: string
   /** For the transfer details a customer needs when paying a balance. */
+  phone?: string
   bankName?: string
   bankAccount?: string
   bankHolder?: string
@@ -43,6 +44,11 @@ export interface OrderItem {
   garment: Garment
   /** cut-style option key -> chosen value. 'other' values are stored verbatim. */
   cutStyle: Record<string, string>
+  /**
+   * Cloth is per garment, like the cut: a suit is routinely a wool blazer with trousers in a
+   * different weight. One material for the whole order could not describe that.
+   */
+  material?: Material
   /** Price for this garment alone. Optional: a lump-sum order simply leaves them unset. */
   price?: number
   notes?: string
@@ -104,7 +110,6 @@ export interface Order {
   measurementSource: Record<string, MeasurementSource>
   posture: string[]
   postureNotes?: string
-  material: Material
   /**
    * The order total, and the single stored source of truth for money.
    *

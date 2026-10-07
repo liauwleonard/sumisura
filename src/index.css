@@ -30,3 +30,27 @@ input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* The invoice is the only thing that prints. Everything chrome-like opts out with .print-hide,
+   and the page itself drops its background so a printer does not flood the paper with grey. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    padding: 0;
+  }
+
+  /* Keep a row of the order table from splitting across two sheets. */
+  tr,
+  .avoid-break {
+    break-inside: avoid;
+  }
+}

@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useShop } from '../shop/ShopProvider'
 import { useSettings, type Lang, type Unit } from '../i18n'
 import { Button, Card, Chip, Field, inputClass } from '../components/ui'
+import { formatPhone } from '../lib/format'
 import { SyncStatus } from '../components/SyncStatus'
 import { BackupCard } from '../components/BackupCard'
 
@@ -15,6 +16,7 @@ export function Profile() {
   const [draft, setDraft] = useState({
     name,
     address: shop.address ?? '',
+    phone: shop.phone ?? '',
     bankName: shop.bankName ?? '',
     bankAccount: shop.bankAccount ?? '',
     bankHolder: shop.bankHolder ?? '',
@@ -25,16 +27,18 @@ export function Profile() {
     setDraft({
       name,
       address: shop.address ?? '',
+      phone: shop.phone ?? '',
       bankName: shop.bankName ?? '',
       bankAccount: shop.bankAccount ?? '',
       bankHolder: shop.bankHolder ?? '',
     })
-  }, [name, shop.address, shop.bankName, shop.bankAccount, shop.bankHolder])
+  }, [name, shop.address, shop.phone, shop.bankName, shop.bankAccount, shop.bankHolder])
 
   const dirty =
     draft.name.trim() !== '' &&
     (draft.name.trim() !== name ||
       draft.address !== (shop.address ?? '') ||
+      draft.phone !== (shop.phone ?? '') ||
       draft.bankName !== (shop.bankName ?? '') ||
       draft.bankAccount !== (shop.bankAccount ?? '') ||
       draft.bankHolder !== (shop.bankHolder ?? ''))
@@ -43,6 +47,7 @@ export function Profile() {
     update({
       name: draft.name.trim(),
       address: draft.address.trim() || undefined,
+      phone: draft.phone.trim() || undefined,
       bankName: draft.bankName.trim() || undefined,
       bankAccount: draft.bankAccount.trim() || undefined,
       bankHolder: draft.bankHolder.trim() || undefined,
@@ -66,6 +71,15 @@ export function Profile() {
             rows={2}
             value={draft.address}
             onChange={(e) => setDraft({ ...draft, address: e.target.value })}
+          />
+        </Field>
+
+        <Field label={t('phone')}>
+          <input
+            className={inputClass}
+            inputMode="tel"
+            value={draft.phone}
+            onChange={(e) => setDraft({ ...draft, phone: formatPhone(e.target.value) })}
           />
         </Field>
 

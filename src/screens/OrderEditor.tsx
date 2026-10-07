@@ -69,9 +69,10 @@ interface Props {
   shopId: string
   orderId: string | null
   onClose: () => void
+  onInvoice: (orderId: string) => void
 }
 
-export function OrderEditor({ shopId, orderId, onClose }: Props) {
+export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
   const { t } = useSettings()
   const [draft, setDraft] = useState<Order | null>(null)
   const [step, setStep] = useState<Step>('customer')
@@ -79,7 +80,12 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
   const [prefill, setPrefill] = useState<Prefill | null>(null)
   const [showLog, setShowLog] = useState(false)
 
-  const isExisting = orderId !== null
+  /**
+   * Whether this order is in the database yet — not whether it arrived with an id.
+   * An order created and saved in this session is just as real as one opened from the list,
+   * and gating Invoice and Delete on the incoming prop hid them until it was reopened.
+   */
+  const [persisted, setPersisted] = useState(orderId !== null)
 
   useEffect(() => {
     let cancelled = false
@@ -103,7 +109,6 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
         measurements: blankMeasurements(),
         measurementSource: {},
         posture: [],
-        material: {},
         price: 0,
         payments: [],
         createdAt: now(),
@@ -119,8 +124,8 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
 
   const log = useLiveQuery(
     (): Promise<ChangeLogEntry[]> =>
-      draft && isExisting ? historyForOrder(draft.id) : Promise.resolve([]),
-    [draft?.id, isExisting],
+      draft && persisted ? historyForOrder(draft.id) : Promise.resolve([]),
+    [draft?.id, persisted],
     [] as ChangeLogEntry[],
   )
 
@@ -135,6 +140,7 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
     if (!next.customerId) return
     await saveOrder(next)
     setDirty(false)
+    setPersisted(true)
   }
 
   async function goToStep(target: Step) {
@@ -161,6 +167,7 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
     setDirty(true)
     await saveOrder(merged)
     setDirty(false)
+    setPersisted(true)
   }
 
   const addGarment = (garment: Garment) =>
@@ -184,7 +191,17 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
         </h1>
         {dirty && <Chip tone="warn">•</Chip>}
         <div className="ml-auto flex items-center gap-2">
-          {isExisting && (
+          {persisted && draft.customerId && (
+            <Button
+              onClick={async () => {
+                if (dirty) await persist()
+                onInvoice(draft.id)
+              }}
+            >
+              {t('invoice')}
+            </Button>
+          )}
+          {persisted && (
             <Button
               variant="danger"
               onClick={async () => {
@@ -233,7 +250,7 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
             onAdd={addGarment}
             onRemove={removeGarment}
           />
-          <MeasurementStep order={draft} saved={isExisting} onChange={change} />
+          <MeasurementStep order={draft} saved={persisted} onChange={change} />
         </div>
       )}
 
@@ -270,7 +287,7 @@ export function OrderEditor({ shopId, orderId, onClose }: Props) {
         </div>
       )}
 
-      {isExisting && (
+      {persisted && (
         <Card className="mt-6">
           <button
             onClick={() => setShowLog(!showLog)}
