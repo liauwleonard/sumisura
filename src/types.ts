@@ -1,12 +1,13 @@
 export type ID = string
 
-export type Garment = 'jacket' | 'trousers' | 'shirt' | 'waistcoat'
+export type Garment = 'blazer' | 'trousers' | 'shirt' | 'vest'
 export type OrderType = 'custom' | 'alteration'
 
 export const ORDER_STATUSES = [
   'measured',
   'cutting',
   'fitting',
+  'final_fitting',
   'finishing',
   'ready',
   'collected',
@@ -16,6 +17,11 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number]
 export interface Shop {
   id: ID
   name: string
+  address?: string
+  /** For the transfer details a customer needs when paying a balance. */
+  bankName?: string
+  bankAccount?: string
+  bankHolder?: string
   createdAt: number
 }
 
@@ -38,6 +44,17 @@ export interface OrderItem {
   /** cut-style option key -> chosen value. 'other' values are stored verbatim. */
   cutStyle: Record<string, string>
   /** Price for this garment alone. Optional: a lump-sum order simply leaves them unset. */
+  price?: number
+  notes?: string
+}
+
+export interface Accessory {
+  id: ID
+  name: string
+  /** Free text, because a tie is sized by length and a button by diameter. */
+  size?: string
+  material?: string
+  qty?: number
   price?: number
   notes?: string
 }
@@ -75,7 +92,14 @@ export interface Order {
   type: OrderType
   status: OrderStatus
   items: OrderItem[]
-  /** Canonical centimetres. null = not measured. Frozen snapshot for this order. */
+  accessories?: Accessory[]
+  /**
+   * Canonical centimetres, keyed `<garment>.<field>` — "blazer.chest", "shirt.chest".
+   *
+   * Namespaced per garment because a blazer chest and a shirt chest are different numbers:
+   * the tailor cuts them with different ease. A single shared `chest` made editing one
+   * silently change the other.
+   */
   measurements: Record<string, number | null>
   measurementSource: Record<string, MeasurementSource>
   posture: string[]
@@ -125,9 +149,15 @@ export interface ChangeLogEntry {
 
 export const paidOf = (order: Order) => order.payments.reduce((sum, p) => sum + p.amount, 0)
 
-/** Sum of the per-garment prices. Zero means this order is priced as a lump sum. */
+/** Sum of the per-garment prices. */
 export const itemsSubtotal = (order: Order) =>
   order.items.reduce((sum, i) => sum + (i.price ?? 0), 0)
+
+export const accessoriesSubtotal = (order: Order) =>
+  (order.accessories ?? []).reduce((sum, a) => sum + (a.price ?? 0) * (a.qty ?? 1), 0)
+
+/** Everything priced on this order. Zero means it is priced as a lump sum instead. */
+export const subtotalOf = (order: Order) => itemsSubtotal(order) + accessoriesSubtotal(order)
 
 /**
  * What `price` should become after a change to item prices or the discount.
@@ -142,13 +172,13 @@ export function discountAmount(order: Order): number {
   if (value <= 0) return 0
   if (order.discountType === 'percent') {
     // Capped at 100% so a slip of the keyboard cannot turn into a negative total.
-    return Math.round((itemsSubtotal(order) * Math.min(value, 100)) / 100)
+    return Math.round((subtotalOf(order) * Math.min(value, 100)) / 100)
   }
   return value
 }
 
 export function recalculatedTotal(order: Order): number {
-  const subtotal = itemsSubtotal(order)
+  const subtotal = subtotalOf(order)
   if (subtotal <= 0) return order.price
   return Math.max(0, subtotal - discountAmount(order))
 }

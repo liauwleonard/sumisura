@@ -4,6 +4,34 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-07 — Tailor's vocabulary, separate measurements per garment, accessories
+Driven by the tailor's feedback after real use. No data migration: still in testing, so stored
+keys were renamed properly rather than carrying a label/key mismatch forever.
+
+- **Jacket → Blazer, Waistcoat → Vest, Sleeve length → Arm length.** Stored keys renamed too
+  (`blazer`, `vest`, `arm_length`, `blazer_length`, `vest_length`), which is only cheap because
+  there is no production data yet.
+- **Neck removed from Blazer**, kept on Shirt — the collar is cut from the shirt measurement.
+- **Measurements are now namespaced per garment**, keyed `<garment>.<field>`. Previously one
+  flat map meant a blazer chest and a shirt chest were literally the same stored number, so
+  editing either silently changed the other. The tailor cuts them with different ease.
+  Verified: blazer.chest 98 alongside shirt.chest 104, and the same for waist, shoulder width,
+  back width and arm length.
+- `measureFresh` now clears the active garment only — re-measuring a blazer no longer wipes
+  the trousers.
+- **New status `final_fitting`**, between Fitting and Finishing.
+- **Accessories**: ties, cufflinks, custom ornaments. Name, size, material, quantity, notes,
+  price. Deliberately not garments — they carry no measurement field set, and size is free text
+  because a tie is sized by length and a button by diameter. They appear on the Measurement tab
+  and are priced on Balance, feeding the subtotal (`subtotalOf` = garments + accessories).
+  Visible even on an order with no garment, since an order can be a tie and nothing else.
+- **Shop profile**: address plus bank name, account number and account holder, for the transfer
+  details a customer needs. Requires the SQL at the end of `supabase/schema.sql` to be run
+  first, or the fields appear to save and vanish on reload.
+- `blankMeasurements()` now returns `{}` — pre-seeding every garment x field pair would be
+  noise, and an absent key already means "not measured".
+- Change-log labels handle namespaced measurements: `blazer.chest` reads "Blazer · Chest".
+
 ### 2026-08-17 — Balance layout, and the Tailwind bug behind it
 - **Found why the price field looked oversized: it was.** `inputClass` carried `w-full`, and
   Tailwind resolves conflicting width utilities by their order in the generated CSS, not by the

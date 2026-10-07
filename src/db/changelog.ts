@@ -55,7 +55,7 @@ export function diffOrder(before: Order | undefined, after: Order): Diff[] {
   pushIfChanged(out, 'balance', 'price', before.price, after.price)
   pushIfChanged(out, 'balance', 'discount', before.discount, after.discount)
 
-  // Per-garment prices are keyed by garment so a log line reads "jacket price: 0 -> 3500000".
+  // Per-garment prices are keyed by garment so a log line reads "blazer price: 0 -> 3500000".
   const priceMap = (o: Order) => {
     const m: Record<string, number> = {}
     for (const item of o.items) if (item.price != null) m[`${item.garment}.price`] = item.price

@@ -10,22 +10,94 @@ import { BackupCard } from '../components/BackupCard'
 export function Profile() {
   const { t, lang, unit, setLang, setUnit } = useSettings()
   const { cloud, session, signOut } = useAuth()
-  const { name, role, rename } = useShop()
-  const [draft, setDraft] = useState(name)
+  const shop = useShop()
+  const { name, role, update } = shop
+  const [draft, setDraft] = useState({
+    name,
+    address: shop.address ?? '',
+    bankName: shop.bankName ?? '',
+    bankAccount: shop.bankAccount ?? '',
+    bankHolder: shop.bankHolder ?? '',
+  })
 
-  // The name arrives asynchronously; don't strand the field on its initial empty value.
-  useEffect(() => setDraft(name), [name])
+  // Details arrive asynchronously; don't strand the fields on their initial empty values.
+  useEffect(() => {
+    setDraft({
+      name,
+      address: shop.address ?? '',
+      bankName: shop.bankName ?? '',
+      bankAccount: shop.bankAccount ?? '',
+      bankHolder: shop.bankHolder ?? '',
+    })
+  }, [name, shop.address, shop.bankName, shop.bankAccount, shop.bankHolder])
 
-  const dirty = draft.trim() !== name && draft.trim() !== ''
+  const dirty =
+    draft.name.trim() !== '' &&
+    (draft.name.trim() !== name ||
+      draft.address !== (shop.address ?? '') ||
+      draft.bankName !== (shop.bankName ?? '') ||
+      draft.bankAccount !== (shop.bankAccount ?? '') ||
+      draft.bankHolder !== (shop.bankHolder ?? ''))
+
+  const save = () =>
+    update({
+      name: draft.name.trim(),
+      address: draft.address.trim() || undefined,
+      bankName: draft.bankName.trim() || undefined,
+      bankAccount: draft.bankAccount.trim() || undefined,
+      bankHolder: draft.bankHolder.trim() || undefined,
+    })
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 pb-28">
       <Card className="space-y-3">
         <div className="text-sm font-medium text-stone-600">{t('shop')}</div>
         <Field label={t('shopName')} hint={t('shopNameHint')}>
-          <input className={inputClass} value={draft} onChange={(e) => setDraft(e.target.value)} />
+          <input
+            className={inputClass}
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          />
         </Field>
-        <Button variant="primary" disabled={!dirty} onClick={() => rename(draft)}>
+
+        <Field label={t('address')}>
+          <textarea
+            className={inputClass}
+            rows={2}
+            value={draft.address}
+            onChange={(e) => setDraft({ ...draft, address: e.target.value })}
+          />
+        </Field>
+
+        <div className="border-t border-stone-200 pt-3 text-sm font-medium text-stone-600">
+          {t('bankDetails')}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t('bankName')}>
+            <input
+              className={inputClass}
+              value={draft.bankName}
+              onChange={(e) => setDraft({ ...draft, bankName: e.target.value })}
+            />
+          </Field>
+          <Field label={t('bankAccount')}>
+            <input
+              className={inputClass}
+              inputMode="numeric"
+              value={draft.bankAccount}
+              onChange={(e) => setDraft({ ...draft, bankAccount: e.target.value })}
+            />
+          </Field>
+        </div>
+        <Field label={t('bankHolder')}>
+          <input
+            className={inputClass}
+            value={draft.bankHolder}
+            onChange={(e) => setDraft({ ...draft, bankHolder: e.target.value })}
+          />
+        </Field>
+
+        <Button variant="primary" disabled={!dirty} onClick={save}>
           {dirty ? t('save') : t('saved')}
         </Button>
       </Card>

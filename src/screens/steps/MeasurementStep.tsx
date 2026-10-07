@@ -1,12 +1,19 @@
 import { useMemo, useRef, useState } from 'react'
 import type { Garment, Order } from '../../types'
-import { FIELDS_BY_GARMENT, POSTURE_OPTIONS, fromDisplay, toDisplay } from '../../data/measurements'
+import {
+  FIELDS_BY_GARMENT,
+  POSTURE_OPTIONS,
+  fromDisplay,
+  measurementKey,
+  toDisplay,
+} from '../../data/measurements'
 import type { View } from '../../data/mannequin'
 import { Mannequin } from '../../components/Mannequin'
 import { FieldHistory } from '../../components/FieldHistory'
 import { label, useSettings } from '../../i18n'
 import { formatDate } from '../../lib/format'
 import { Button, Card, inputClass } from '../../components/ui'
+import { AccessoryList } from '../../components/AccessoryList'
 
 interface Props {
   order: Order
@@ -20,25 +27,37 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
     () => Array.from(new Set(order.items.map((i) => i.garment))) as Garment[],
     [order.items],
   )
-  const [garment, setGarment] = useState<Garment>(garments[0] ?? 'jacket')
+  const [garment, setGarment] = useState<Garment>(garments[0] ?? 'blazer')
   const [view, setView] = useState<View>('front')
   const [activeField, setActiveField] = useState<string | null>(null)
   const inputs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  const active: Garment = garments.includes(garment) ? garment : (garments[0] ?? 'jacket')
+  const active: Garment = garments.includes(garment) ? garment : (garments[0] ?? 'blazer')
   const fields = FIELDS_BY_GARMENT[active]
 
+  /** The figure and its labels are keyed by bare field name, so unwrap this garment's slice. */
+  const valuesForFigure = Object.fromEntries(
+    fields.map((f) => [f, order.measurements[measurementKey(active, f)] ?? null]),
+  )
+
+  // Accessories still show with no garment: an order can be a tie and nothing else.
   if (garments.length === 0) {
-    return <Card className="text-stone-500">{t('noGarmentSelected')}</Card>
+    return (
+      <div className="space-y-4">
+        <Card className="text-stone-500">{t('noGarmentSelected')}</Card>
+        <AccessoryList order={order} onChange={onChange} />
+      </div>
+    )
   }
 
   function setValue(field: string, raw: string) {
     const cm = fromDisplay(raw, unit)
+    const key = measurementKey(active, field)
     // Typing a value clears its "carried over" tag — it is now freshly measured.
-    const { [field]: _dropped, ...restSources } = order.measurementSource
+    const { [key]: _dropped, ...restSources } = order.measurementSource
     void _dropped
     onChange({
-      measurements: { ...order.measurements, [field]: cm },
+      measurements: { ...order.measurements, [key]: cm },
       measurementSource: restSources,
     })
   }
@@ -51,9 +70,12 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
 
   function measureFresh() {
     if (!confirm(t('measureFreshConfirm'))) return
-    const cleared: Record<string, number | null> = {}
-    for (const f of Object.keys(order.measurements)) cleared[f] = null
-    onChange({ measurements: cleared, measurementSource: {} })
+    // Clears this garment only — re-measuring a blazer should not wipe the trousers.
+    const cleared = { ...order.measurements }
+    for (const f of fields) delete cleared[measurementKey(active, f)]
+    const sources = { ...order.measurementSource }
+    for (const f of fields) delete sources[measurementKey(active, f)]
+    onChange({ measurements: cleared, measurementSource: sources })
   }
 
   return (
@@ -100,7 +122,7 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
           <Mannequin
             view={view}
             fields={fields}
-            values={order.measurements}
+            values={valuesForFigure}
             activeField={activeField}
             onPick={focusField}
           />
@@ -109,7 +131,8 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
         <div className="space-y-3">
           <Card className="space-y-3">
             {fields.map((field) => {
-              const source = order.measurementSource[field]
+              const key = measurementKey(active, field)
+              const source = order.measurementSource[key]
               return (
                 <div key={field}>
                   <label className="flex items-center gap-3">
@@ -129,7 +152,7 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
                           source ? 'border-dashed border-amber-400 bg-amber-50/50' : ''
                         }`}
                         inputMode="decimal"
-                        value={toDisplay(order.measurements[field] ?? null, unit)}
+                        value={toDisplay(order.measurements[key] ?? null, unit)}
                         onFocus={() => setActiveField(field)}
                         onChange={(e) => setValue(field, e.target.value)}
                       />
@@ -146,7 +169,7 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
                       })}
                     </div>
                   )}
-                  {saved && <FieldHistory orderId={order.id} field={field} />}
+                  {saved && <FieldHistory orderId={order.id} field={key} />}
                 </div>
               )
             })}
@@ -189,6 +212,8 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
           </Card>
         </div>
       </div>
+
+      <AccessoryList order={order} onChange={onChange} />
     </div>
   )
 }

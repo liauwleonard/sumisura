@@ -10,7 +10,7 @@ export interface CutOption {
  * (see CutStyleFields) so the tailor is never trapped by our vocabulary.
  */
 export const CUT_OPTIONS: Record<Garment, CutOption[]> = {
-  jacket: [
+  blazer: [
     { key: 'breast', values: ['single', 'double'] },
     { key: 'buttons', values: ['1', '2', '3'] },
     { key: 'vent', values: ['none', 'single', 'double'] },
@@ -30,7 +30,7 @@ export const CUT_OPTIONS: Record<Garment, CutOption[]> = {
     { key: 'cuff_style', values: ['barrel', 'french'] },
     { key: 'pocket', values: ['yes', 'no'] },
   ],
-  waistcoat: [
+  vest: [
     { key: 'breast', values: ['single', 'double'] },
     { key: 'buttons', values: ['4', '5', '6'] },
     { key: 'back', values: ['lining', 'same_fabric'] },

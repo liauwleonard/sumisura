@@ -3,13 +3,20 @@ import { LOCAL_SHOP_ID, db, getShop } from '../db/db'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 
-interface Shop {
-  id: string | null
+interface ShopDetails {
   name: string
+  address?: string
+  bankName?: string
+  bankAccount?: string
+  bankHolder?: string
+}
+
+interface Shop extends ShopDetails {
+  id: string | null
   role: string | null
   /** true once we know which shop we're in — screens wait for this. */
   ready: boolean
-  rename: (name: string) => Promise<void>
+  update: (patch: Partial<ShopDetails>) => Promise<void>
 }
 
 const ShopContext = createContext<Shop>({
@@ -17,7 +24,7 @@ const ShopContext = createContext<Shop>({
   name: '',
   role: null,
   ready: false,
-  rename: async () => {},
+  update: async () => {},
 })
 
 export const useShop = () => useContext(ShopContext)
@@ -31,7 +38,7 @@ export const useShop = () => useContext(ShopContext)
 export function ShopProvider({ children }: { children: ReactNode }) {
   const { cloud, session } = useAuth()
   const [id, setId] = useState<string | null>(null)
-  const [name, setName] = useState('')
+  const [details, setDetails] = useState<ShopDetails>({ name: '' })
   const [role, setRole] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
 
@@ -45,7 +52,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         const local = await getShop()
         if (cancelled) return
         setId(local.id)
-        setName(local.name)
+        setDetails(fromLocal(local))
         setRole(null)
         setReady(true)
         return
@@ -53,7 +60,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from('shop_members')
-        .select('role, shop_id, shops(name)')
+        .select('role, shop_id, shops(name, address, bank_name, bank_account, bank_holder)')
         .limit(1)
         .maybeSingle()
 
@@ -65,20 +72,26 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         const local = await getShop()
         if (cancelled) return
         setId(local.id)
-        setName(local.name)
+        setDetails(fromLocal(local))
         setRole(null)
         setReady(true)
         return
       }
 
       const shopId = data.shop_id as string
-      const shopName = (data.shops as unknown as { name: string } | null)?.name ?? 'My Shop'
+      const row = data.shops as unknown as Record<string, string | null> | null
 
       await claimLocalRows(shopId)
       if (cancelled) return
 
       setId(shopId)
-      setName(shopName)
+      setDetails({
+        name: row?.name ?? 'My Shop',
+        address: row?.address ?? undefined,
+        bankName: row?.bank_name ?? undefined,
+        bankAccount: row?.bank_account ?? undefined,
+        bankHolder: row?.bank_holder ?? undefined,
+      })
       setRole((data.role as string) ?? null)
       setReady(true)
     }
@@ -89,21 +102,47 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     }
   }, [cloud, session])
 
-  const rename = async (next: string) => {
-    const trimmed = next.trim()
-    if (!id || !trimmed) return
-    setName(trimmed)
+  const update = async (patch: Partial<ShopDetails>) => {
+    if (!id) return
+    const next = { ...details, ...patch }
+    setDetails(next)
     if (cloud && session && supabase) {
-      await supabase.from('shops').update({ name: trimmed }).eq('id', id)
+      // snake_case on the way out; the column names are the database's, not the app's.
+      await supabase
+        .from('shops')
+        .update({
+          name: next.name,
+          address: next.address ?? null,
+          bank_name: next.bankName ?? null,
+          bank_account: next.bankAccount ?? null,
+          bank_holder: next.bankHolder ?? null,
+        })
+        .eq('id', id)
     } else {
-      await db.shops.update(id, { name: trimmed })
+      await db.shops.update(id, next)
     }
   }
 
   return (
-    <ShopContext.Provider value={{ id, name, role, ready, rename }}>{children}</ShopContext.Provider>
+    <ShopContext.Provider value={{ id, ...details, role, ready, update }}>
+      {children}
+    </ShopContext.Provider>
   )
 }
+
+const fromLocal = (shop: {
+  name: string
+  address?: string
+  bankName?: string
+  bankAccount?: string
+  bankHolder?: string
+}): ShopDetails => ({
+  name: shop.name,
+  address: shop.address,
+  bankName: shop.bankName,
+  bankAccount: shop.bankAccount,
+  bankHolder: shop.bankHolder,
+})
 
 /**
  * Work done before anyone signed in belongs to the on-device shop, so it is re-stamped onto the

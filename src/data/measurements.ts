@@ -5,17 +5,17 @@ import type { Garment } from '../types'
  * display names live in the i18n dictionaries, so relabelling is free.
  */
 export const FIELDS_BY_GARMENT: Record<Garment, string[]> = {
-  jacket: [
-    'neck',
+  // No neck: the tailor takes it on the shirt, which is what the collar is cut from.
+  blazer: [
     'chest',
     'waist',
     'seat',
     'shoulder_width',
     'back_width',
-    'sleeve_length',
+    'arm_length',
     'bicep',
     'wrist',
-    'jacket_length',
+    'blazer_length',
   ],
   trousers: ['trouser_waist', 'seat', 'thigh', 'knee', 'hem', 'outseam', 'inseam', 'rise'],
   shirt: [
@@ -24,12 +24,20 @@ export const FIELDS_BY_GARMENT: Record<Garment, string[]> = {
     'shirt_waist',
     'shoulder_width',
     'back_width',
-    'sleeve_length',
+    'arm_length',
     'cuff',
     'shirt_length',
   ],
-  waistcoat: ['chest', 'waist', 'shoulder_width', 'back_width', 'waistcoat_length'],
+  vest: ['chest', 'waist', 'shoulder_width', 'back_width', 'vest_length'],
 }
+
+/**
+ * Measurements are stored per garment, keyed `<garment>.<field>`.
+ *
+ * A blazer chest and a shirt chest are different numbers — the tailor cuts them with different
+ * ease. One shared `chest` meant editing either silently changed the other.
+ */
+export const measurementKey = (garment: Garment, field: string) => `${garment}.${field}`
 
 export const ALL_FIELDS = Array.from(new Set(Object.values(FIELDS_BY_GARMENT).flat()))
 

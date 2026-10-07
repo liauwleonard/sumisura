@@ -214,3 +214,15 @@ create trigger on_auth_user_created
 --   );
 --
 -- Phase 3c adds a shop-name field in the app's Settings so this stops needing SQL.
+
+-- ---------------------------------------------------------------------------
+-- 2026-10-07 — shop address and bank transfer details
+--
+-- Added after the fact, so these are ALTERs rather than part of the table above. Safe to
+-- re-run: each is guarded. Run this before deploying the Profile changes, or the new fields
+-- will appear to save and then quietly vanish on reload.
+-- ---------------------------------------------------------------------------
+alter table public.shops add column if not exists address      text;
+alter table public.shops add column if not exists bank_name    text;
+alter table public.shops add column if not exists bank_account text;
+alter table public.shops add column if not exists bank_holder  text;

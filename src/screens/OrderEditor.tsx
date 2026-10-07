@@ -11,7 +11,6 @@ import {
   type Order,
   type OrderType,
 } from '../types'
-import { ALL_FIELDS } from '../data/measurements'
 import { CustomerStep } from './steps/CustomerStep'
 import { MeasurementStep } from './steps/MeasurementStep'
 import { MaterialCutStep } from './steps/MaterialCutStep'
@@ -24,10 +23,10 @@ import { Button, Card, Chip, Field, inputClass } from '../components/ui'
 const STEPS = ['customer', 'measurement', 'material', 'balance'] as const
 type Step = (typeof STEPS)[number]
 
-const GARMENTS: Garment[] = ['jacket', 'trousers', 'shirt', 'waistcoat']
+const GARMENTS: Garment[] = ['blazer', 'trousers', 'shirt', 'vest']
 
-const blankMeasurements = () =>
-  Object.fromEntries(ALL_FIELDS.map((f) => [f, null])) as Record<string, number | null>
+/** Empty: a key is written the first time a value is typed, and absent means not measured. */
+const blankMeasurements = (): Record<string, number | null> => ({})
 
 /** Change-log rows store stable keys; these turn them into readable labels. */
 const LOG_FIELD_KEYS: Record<string, keyof Dict> = {
@@ -49,8 +48,13 @@ const LOG_FIELD_KEYS: Record<string, keyof Dict> = {
 }
 
 function logLabel(t: T, section: string, field: string) {
-  if (section === 'measurement') return label(t, 'm_', field)
-  // Dotted keys are garment-scoped: "trousers.fit" from cut style, "jacket.price" from pricing.
+  if (section === 'measurement') {
+    if (!field.includes('.')) return label(t, 'm_', field)
+    const [garment, name] = field.split('.')
+    return `${t(`garment_${garment}` as keyof Dict)} · ${label(t, 'm_', name)}`
+  }
+  // Dotted keys are garment-scoped: "trousers.fit" from cut style, "blazer.price" from pricing,
+  // "blazer.chest" from measurements.
   if (field.includes('.')) {
     const [garment, option] = field.split('.')
     const name = t(`garment_${garment}` as keyof Dict)

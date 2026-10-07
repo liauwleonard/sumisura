@@ -106,7 +106,7 @@ export const LINES: MeasureLine[] = [
     anchor: 'end',
   },
   {
-    field: 'sleeve_length',
+    field: 'arm_length',
     view: 'front',
     points: [[140, 116], [86, 212], [50, 296]],
     label: [34, 224],
@@ -115,7 +115,7 @@ export const LINES: MeasureLine[] = [
 
   // ---- lengths, drawn down the centre front where the torso is empty ----
   {
-    field: 'jacket_length',
+    field: 'blazer_length',
     view: 'front',
     points: [[200, 114], [200, 352]],
     label: [208, 348],
@@ -129,7 +129,7 @@ export const LINES: MeasureLine[] = [
     anchor: 'start',
   },
   {
-    field: 'waistcoat_length',
+    field: 'vest_length',
     view: 'front',
     points: [[200, 114], [200, 286]],
     label: [208, 282],
@@ -203,14 +203,14 @@ export const LINES: MeasureLine[] = [
     anchor: 'start',
   },
   {
-    field: 'sleeve_length',
+    field: 'arm_length',
     view: 'back',
     points: [[140, 116], [86, 212], [50, 296]],
     label: [34, 224],
     anchor: 'end',
   },
   {
-    field: 'jacket_length',
+    field: 'blazer_length',
     view: 'back',
     points: [[200, 114], [200, 352]],
     label: [208, 348],
@@ -224,7 +224,7 @@ export const LINES: MeasureLine[] = [
     anchor: 'start',
   },
   {
-    field: 'waistcoat_length',
+    field: 'vest_length',
     view: 'back',
     points: [[200, 114], [200, 286]],
     label: [208, 282],

@@ -106,6 +106,53 @@ labels had to come from the dictionary anyway to keep stored keys renameable.
 
 ---
 
+## Phase 5 — Tailor's first feedback (2026-10-07)
+
+His actual vocabulary and workflow, after using it. Grouped by risk.
+
+### 5a — Labels only, nothing stored changes
+- [ ] `jacket` → **Blazer**, `waistcoat` → **Vest** — i18n only. The stored garment keys stay
+      `jacket` / `waistcoat`, because changing them would orphan every existing order's items.
+- [ ] `sleeve_length` → **Arm Length**. Key unchanged, same reason.
+
+### 5b — Field list
+- [ ] Remove `neck` from Blazer. Keep it on Shirt.
+      Values already recorded under the blazer stop being shown; they are not deleted.
+
+### 5c — Separate measurements per garment  ← the risky one
+Today `measurements` is one flat map, so Blazer chest and Shirt chest are literally the same
+stored number. The tailor wants them independent.
+
+- [ ] Re-key to `jacket.chest`, `shirt.chest`, `trousers.thigh`, …
+- [ ] One-time migration: for each order, copy each flat value into every garment on that order,
+      so nothing is lost and both garments start from what was already measured.
+- [ ] **Flat keys are kept, not deleted.** Until the tailor taps Update on his iPad, that device
+      runs the old code — which reads flat keys. Deleting them would blank his measurements.
+- [ ] Reads fall back to the flat key when a namespaced one is missing.
+
+### 5d — Status
+- [ ] Add `final_fitting` between `fitting` and `finishing` — that is where it happens.
+
+### 5e — Accessories
+- [ ] New section in Measurement, with a Name input. **Shape not yet decided** — see question
+      in the 2026-10-07 session.
+
+### 5f — Shop profile
+- [ ] Address, bank name, account number, account holder.
+- [ ] Supabase migration adding those columns to `shops` — Leonard runs it, as with `schema.sql`.
+- [ ] Fields on the Profile screen.
+
+### Deferred, by Leonard's call
+- Invoice per order.
+- Replace the mannequin with a garment-specific image: pick Blazer, see a blazer, with its own
+  measurement lines. Bigger job — it means a drawing and a line set per garment.
+
+### Risks
+- 5c migrates live data. Non-destructive by design: nothing is removed, only added.
+- Mixed-version window: the iPad on old code reads flat keys, which still exist, so it keeps
+  working. Tell the tailor to tap Update once this ships.
+- 5f does not save until the Supabase columns exist. Migration first, then deploy.
+
 ## Open items
 - [ ] **Show the tailor the field list and rename to his vocabulary.** Built from standard
       suit-tailoring practice per Leonard's call — labels live in `src/i18n/`, so renaming and

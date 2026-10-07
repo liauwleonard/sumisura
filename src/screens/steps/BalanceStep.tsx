@@ -1,7 +1,7 @@
 import {
   balanceOf,
   discountAmount,
-  itemsSubtotal,
+  subtotalOf,
   paidOf,
   paymentStatusOf,
   recalculatedTotal,
@@ -41,8 +41,9 @@ export function BalanceStep({ order, onChange }: Props) {
   const { t, lang } = useSettings()
   const paid = paidOf(order)
   const receivable = balanceOf(order)
-  const subtotal = itemsSubtotal(order)
+  const subtotal = subtotalOf(order)
   const priced = subtotal > 0
+  const accessories = order.accessories ?? []
   const status = paymentStatusOf(order)
   const discountType: DiscountType = order.discountType ?? 'amount'
 
@@ -55,6 +56,11 @@ export function BalanceStep({ order, onChange }: Props) {
   const setItemPrice = (id: string, price: number) =>
     applyPricing({
       items: order.items.map((i: OrderItem) => (i.id === id ? { ...i, price } : i)),
+    })
+
+  const setAccessoryPrice = (id: string, price: number) =>
+    applyPricing({
+      accessories: accessories.map((a) => (a.id === id ? { ...a, price } : a)),
     })
 
   const addPayment = () =>
@@ -71,7 +77,7 @@ export function BalanceStep({ order, onChange }: Props) {
       <Card className="space-y-3">
         <div className="font-semibold">{t('pricing')}</div>
 
-        {order.items.length === 0 ? (
+        {order.items.length === 0 && accessories.length === 0 ? (
           // No garments yet, so there is nothing to break down — take a lump sum.
           <Row label={t('price')}>
             <MoneyInput className={MONEY_FIELD} value={order.price} onChange={(price) => onChange({ price })} />
@@ -85,6 +91,20 @@ export function BalanceStep({ order, onChange }: Props) {
                   value={item.price ?? 0}
                   placeholder="0"
                   onChange={(price) => setItemPrice(item.id, price)}
+                />
+              </Row>
+            ))}
+
+            {accessories.map((a) => (
+              <Row
+                key={a.id}
+                label={`${a.name || t('accessoryName')}${(a.qty ?? 1) > 1 ? ` ×${a.qty}` : ''}`}
+              >
+                <MoneyInput
+                  className={MONEY_FIELD}
+                  value={a.price ?? 0}
+                  placeholder="0"
+                  onChange={(price) => setAccessoryPrice(a.id, price)}
                 />
               </Row>
             ))}
