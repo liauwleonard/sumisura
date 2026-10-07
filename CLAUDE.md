@@ -52,6 +52,8 @@ server**, never by client-side checks.
 - `src/types.ts` — the whole data model in one file; start here
 - `src/db/db.ts` — Dexie schema and id/number helpers
 - `src/db/changelog.ts` — **diff engine**: `saveOrder` / `saveCustomer` write the change log
+- `src/db/migrate.ts` — repairs orders written before the Oct 2026 rename (jacket→blazer,
+  flat→namespaced measurements, order-level cloth→per item)
 - `src/data/measurements.ts` — field keys per garment, cm/inch conversion
 - `src/data/mannequin.ts` — per-garment silhouettes (garment + detail, no body behind them) and
   every measurement line's coordinates, keyed `LINES[garment][view]`
@@ -92,6 +94,14 @@ TypeScript — they can be ignored or removed.
   rejected by Leonard: one set of human proportions cannot serve four garments each scaled to
   fill the frame, and a centre length line cuts the garment in half. Length is a dimension line
   down the left, outside everything, labelled below its own midpoint.
+- **A stored rename needs `src/db/migrate.ts`, and it has TWO call sites.** The Dexie
+  `version(n).upgrade()` fixes local rows; `rowToOrder` in `src/sync/mapping.ts` fixes rows
+  pulled from Supabase. Miss the second and one device syncing down the old shape reintroduces
+  the bug for everyone. Keep `normaliseOrder` idempotent — both paths may run over the same row.
+- **An unknown garment must never reach `FIELDS_BY_GARMENT[g]` or `FIGURES[g]` unguarded.**
+  Both are plain records; a missing key is `undefined` and the next `.map` or `[view]` throws,
+  which is a white screen rather than a blank field. Test a rename by planting a pre-rename row
+  in IndexedDB and opening it — a clean build proves nothing about stored data.
 - **Never switch the PWA to `autoUpdate`.** A silent reload can discard unsaved measurements.
   The prompt in `src/components/UpdatePrompt.tsx` is deliberate.
 - **Icons are generated, not committed by hand.** Edit `public/icon.svg`, mirror the change in

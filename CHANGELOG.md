@@ -4,6 +4,31 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-08 — Migration for orders written before the rename
+- **Fixed: opening an old Jacket or Waistcoat order white-screened the app.** Not a cosmetic
+  problem — `FIELDS_BY_GARMENT['jacket']` is undefined and the measurement screen threw on
+  render. Introduced by the October rename; found by planting a pre-rename order and opening it.
+- New `src/db/migrate.ts` repairs orders written by the old version:
+  - `jacket` → `blazer`, `waistcoat` → `vest`
+  - `sleeve_length` → `arm_length`, `jacket_length` → `blazer_length`,
+    `waistcoat_length` → `vest_length`
+  - flat measurements → namespaced, spread across every garment on the order that uses the
+    field. A flat `chest` becomes `blazer.chest` AND `shirt.chest`, because that is exactly
+    what the old app showed. The migration must not invent a difference that was never
+    recorded; splitting them is what re-measuring is for.
+  - the old order-level `material` is copied onto every garment that has none, then dropped
+  - `neck` on a blazer disappears, which is correct — the tailor asked for it to go
+- Runs in two places, both calling the same function: a Dexie `version(2)` upgrade for local
+  rows, and `rowToOrder` for anything pulled from Supabase. Without the second, a device syncing
+  down the old shape would reintroduce the crash.
+- The upgrade bumps `updatedAt`, so the repaired order is what syncs up and Postgres stops
+  holding the broken shape.
+- Safe to run twice: an order already in the current shape comes back byte-identical.
+- A flat measurement no garment can claim is **kept**, not dropped. An order whose garments were
+  all removed still holds numbers taken off a real body.
+- Defensive guard added alongside: an unrecognised garment falls back instead of throwing, so a
+  future unknown value cannot take the screen down the same way.
+
 ### 2026-10-08 — Accessories move up next to the garments
 - **`+ Accessory` now sits in the garment picker row**, after `+ Vest` and behind a thin
   divider. It was a button at the very bottom of the Measurement step, below the figure, the

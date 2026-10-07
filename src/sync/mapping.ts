@@ -1,3 +1,4 @@
+import { normaliseOrder } from '../db/migrate'
 import type { ChangeLogEntry, Customer, Order } from '../types'
 
 /**
@@ -63,7 +64,13 @@ export const orderToRow = (o: Order): Row => ({
   deleted_at: o.deletedAt ?? null,
 })
 
-export const rowToOrder = (r: Row): Order => ({
+/**
+ * Rows written by the old version still sit in Postgres, so anything arriving from the cloud is
+ * put through the same repair as the local store — otherwise a second device pulls the broken
+ * shape straight back in and the measurement screen throws.
+ */
+export const rowToOrder = (r: Row): Order =>
+  normaliseOrder({
   id: r.id as string,
   shopId: r.shop_id as string,
   customerId: r.customer_id as string,
@@ -82,7 +89,8 @@ export const rowToOrder = (r: Row): Order => ({
   createdAt: Number(r.created_at),
   updatedAt: Number(r.updated_at),
   deletedAt: r.deleted_at == null ? undefined : Number(r.deleted_at),
-})
+    material: (r.material as Order['items'][number]['material']) ?? undefined,
+  })
 
 // ---- change log ----
 

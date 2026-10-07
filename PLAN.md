@@ -153,8 +153,9 @@ stored number. The tailor wants them independent.
 
 ### Risks
 - 5c migrates live data. Non-destructive by design: nothing is removed, only added.
-- Mixed-version window: the iPad on old code reads flat keys, which still exist, so it keeps
-  working. Tell the tailor to tap Update once this ships.
+- Mixed-version window: a device still on the OLD code will not understand `blazer.chest` and
+  shows blank measurements. It does not crash. Tell the tailor to tap Update on every device
+  once this ships, and to open each device at least once so its local store migrates.
 - 5f does not save until the Supabase columns exist. Migration first, then deploy.
 
 ## Open items

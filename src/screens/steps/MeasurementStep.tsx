@@ -32,7 +32,8 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
   const inputs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const active: Garment = garments.includes(garment) ? garment : (garments[0] ?? 'blazer')
-  const fields = FIELDS_BY_GARMENT[active]
+  // Same reasoning as `known()` in data/mannequin: never render off an unknown garment.
+  const fields = FIELDS_BY_GARMENT[active] ?? []
 
   /** The figure and its labels are keyed by bare field name, so unwrap this garment's slice. */
   const valuesForFigure = Object.fromEntries(

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { ChangeLogEntry, Customer, Order, Shop } from '../types'
+import { needsMigration, normaliseOrder } from './migrate'
 
 /**
  * Local-first store. The app always reads and writes here — cloud sync (Phase 3) runs
@@ -21,6 +22,32 @@ db.version(1).stores({
   orders: 'id, shopId, customerId, number, status, dueDate, updatedAt, deletedAt',
   changeLog: 'id, shopId, orderId, customerId, field, at',
 })
+
+/**
+ * Rewrites orders written before the October 2026 rename. No index changes — the stores line is
+ * repeated unchanged because Dexie requires a version to declare its own schema.
+ *
+ * `updatedAt` is deliberately bumped on every row this touches, so the repaired order is what
+ * sync pushes. Leaving it would mean the broken shape stays in Postgres and comes back down to
+ * the next device that pulls.
+ */
+db.version(2)
+  .stores({
+    shops: 'id, createdAt',
+    customers: 'id, shopId, name, phone, code, updatedAt, deletedAt',
+    orders: 'id, shopId, customerId, number, status, dueDate, updatedAt, deletedAt',
+    changeLog: 'id, shopId, orderId, customerId, field, at',
+  })
+  .upgrade((tx) =>
+    tx
+      .table('orders')
+      .toCollection()
+      .modify((order) => {
+        if (!needsMigration(order)) return
+        Object.assign(order, normaliseOrder(order), { updatedAt: Date.now() })
+        delete order.material
+      }),
+  )
 
 export const newId = () => crypto.randomUUID()
 export const now = () => Date.now()

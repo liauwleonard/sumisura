@@ -303,7 +303,14 @@ export const LINES: Record<Garment, Record<View, MeasureLine[]>> = {
   },
 }
 
-export const figureFor = (garment: Garment, view: View) => FIGURES[garment][view]
+/**
+ * A garment this build does not know about must not take the screen down with it. Migration
+ * handles the renames we know of; this catches anything that still slips through, such as a row
+ * from a newer build arriving over sync.
+ */
+const known = (garment: Garment): Garment => (garment in FIGURES ? garment : 'blazer')
+
+export const figureFor = (garment: Garment, view: View) => FIGURES[known(garment)][view]
 
 /** Fields with no line on a given view are still reachable — the form lists them all. */
-export const linesFor = (garment: Garment, view: View) => LINES[garment][view]
+export const linesFor = (garment: Garment, view: View) => LINES[known(garment)][view]
