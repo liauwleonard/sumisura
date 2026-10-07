@@ -53,13 +53,17 @@ server**, never by client-side checks.
 - `src/db/db.ts` — Dexie schema and id/number helpers
 - `src/db/changelog.ts` — **diff engine**: `saveOrder` / `saveCustomer` write the change log
 - `src/data/measurements.ts` — field keys per garment, cm/inch conversion
-- `src/data/mannequin.ts` — body geometry and every measurement line's coordinates
+- `src/data/mannequin.ts` — per-garment silhouettes (garment + detail, no body behind them) and
+  every measurement line's coordinates, keyed `LINES[garment][view]`
 - `src/data/cutStyles.ts` — cut-style dropdown options
 - `src/lib/prefill.ts` — carry-forward from a customer's previous orders
 - `src/i18n/` — EN + ID dictionaries; **all display labels live here**
-- `src/components/Mannequin.tsx` — the SVG figure
+- `src/components/Mannequin.tsx` — renders whatever figure it is handed, in two depths
 - `src/screens/OrderEditor.tsx` — the 4-step tab shell
 - `src/screens/steps/` — Customer / Measurement / MaterialCut / Balance
+- `src/components/AccessoryList.tsx` — ties and ornaments. Rendered from `OrderEditor`, not from
+  the Measurement step: adding is done from the garment picker row, so every "what is on this
+  order" control sits together. It has no add button and no empty state of its own.
 - `data/`, `queries/`, `notebooks/`, `outputs/` — from the standard scaffold, unused for this project
 
 Note: the scaffold ships a Python `.venv` and `requirements.txt` by default. This project is
@@ -75,7 +79,19 @@ TypeScript — they can be ignored or removed.
 - **Mannequin labels need gutters.** The viewBox is `-130 0 660 620`; the body only occupies
   x 40–360. Indonesian labels are long and clip against a body-tight viewBox.
 - **Adding a measurement field** means: add the key to `FIELDS_BY_GARMENT`, add `m_<key>` to both
-  dictionaries, and add a line to `LINES` if it should appear on the figure.
+  dictionaries, and add a line to `LINES[garment][view]` if it should appear on the figure. The
+  two tables must agree in both directions — a field with no line is merely form-only, but a line
+  naming a field the garment does not have is a silent ghost arrow.
+- **Figure coordinates are judged in the browser, not in the head.** Nudge, rebuild, look. Two
+  things to re-check after any move: Indonesian labels (the longest strings) must stay inside the
+  viewBox, and no two labels in a view may overlap. Both are measurable with `getBBox()` against
+  the live SVG.
+- **Every garment shares one viewBox** so the card does not change height when the tailor
+  switches tabs mid-measurement. Scale the drawing to fill the frame instead of resizing the frame.
+- **No body behind the garment, and length never runs down the centre.** Both were tried and
+  rejected by Leonard: one set of human proportions cannot serve four garments each scaled to
+  fill the frame, and a centre length line cuts the garment in half. Length is a dimension line
+  down the left, outside everything, labelled below its own midpoint.
 - **Never switch the PWA to `autoUpdate`.** A silent reload can discard unsaved measurements.
   The prompt in `src/components/UpdatePrompt.tsx` is deliberate.
 - **Icons are generated, not committed by hand.** Edit `public/icon.svg`, mirror the change in

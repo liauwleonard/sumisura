@@ -144,8 +144,12 @@ stored number. The tailor wants them independent.
 
 ### Deferred, by Leonard's call
 - [x] Invoice per order — printable, shared as PDF over WhatsApp.
-- Replace the mannequin with a garment-specific image: pick Blazer, see a blazer, with its own
-  measurement lines. Bigger job — it means a drawing and a line set per garment.
+- [x] Replace the mannequin with a garment-specific figure: pick Blazer, see a blazer, with its
+  own measurement lines. Drawn as SVG silhouettes over a cropped ghost body — one drawing and one
+  line set per garment per view, eight in all. Photos were considered and rejected: a dark product
+  photo hides the measurement lines, sleeves pressed to the body leave no room for the arm lines,
+  nothing can be ghosted behind an opaque image, and every coordinate would be locked to one
+  picture.
 
 ### Risks
 - 5c migrates live data. Non-destructive by design: nothing is removed, only added.
@@ -157,7 +161,10 @@ stored number. The tailor wants them independent.
 - [ ] **Show the tailor the field list and rename to his vocabulary.** Built from standard
       suit-tailoring practice per Leonard's call — labels live in `src/i18n/`, so renaming and
       reordering is a dictionary edit that never touches stored data.
-- [ ] Confirm the mannequin reads clearly on a real iPad (verified on desktop and narrow widths)
+- [ ] Confirm the garment figures read clearly on a real iPad (verified on desktop and narrow
+      widths, and against the Indonesian dictionary)
+- [ ] Garment photos as thumbnails on the order card and Material & Cut, so an order shows what
+      it contains without reading. Leonard has the images.
 
 ## Later / ideas
 - Assistant accounts sharing one shop (schema already supports it)

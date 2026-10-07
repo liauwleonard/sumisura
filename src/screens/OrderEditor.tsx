@@ -12,6 +12,7 @@ import {
   type OrderType,
 } from '../types'
 import { CustomerStep } from './steps/CustomerStep'
+import { AccessoryList } from '../components/AccessoryList'
 import { MeasurementStep } from './steps/MeasurementStep'
 import { MaterialCutStep } from './steps/MaterialCutStep'
 import { BalanceStep } from './steps/BalanceStep'
@@ -180,6 +181,9 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
 
   const removeGarment = (id: string) => change({ items: draft.items.filter((i) => i.id !== id) })
 
+  const addAccessory = () =>
+    change({ accessories: [...(draft.accessories ?? []), { id: newId(), name: '', qty: 1 }] })
+
   return (
     <div className="mx-auto max-w-5xl p-4 pb-28">
       <header className="mb-4 flex flex-wrap items-center gap-3">
@@ -248,8 +252,13 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
           <GarmentPicker
             order={draft}
             onAdd={addGarment}
+            onAddAccessory={addAccessory}
             onRemove={removeGarment}
           />
+          {/* Only once there is one — an order with no accessories should not pay for the card. */}
+          {(draft.accessories ?? []).length > 0 && (
+            <AccessoryList order={draft} onChange={change} />
+          )}
           <MeasurementStep order={draft} saved={persisted} onChange={change} />
         </div>
       )}
@@ -310,10 +319,12 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
 function GarmentPicker({
   order,
   onAdd,
+  onAddAccessory,
   onRemove,
 }: {
   order: Order
   onAdd: (g: Garment) => void
+  onAddAccessory: () => void
   onRemove: (id: string) => void
 }) {
   const { t } = useSettings()
@@ -339,6 +350,10 @@ function GarmentPicker({
             + {t(`garment_${g}`)}
           </Button>
         ))}
+        {/* An accessory is not a garment, but it is one of the things on this order, so it is
+            added from the same row rather than from a card further down the page. */}
+        <span className="mx-1 self-stretch border-l border-stone-200" aria-hidden />
+        <Button onClick={onAddAccessory}>+ {t('accessory')}</Button>
       </div>
     </Card>
   )

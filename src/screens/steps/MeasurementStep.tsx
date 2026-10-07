@@ -13,7 +13,6 @@ import { FieldHistory } from '../../components/FieldHistory'
 import { label, useSettings } from '../../i18n'
 import { formatDate } from '../../lib/format'
 import { Button, Card, inputClass } from '../../components/ui'
-import { AccessoryList } from '../../components/AccessoryList'
 
 interface Props {
   order: Order
@@ -40,14 +39,9 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
     fields.map((f) => [f, order.measurements[measurementKey(active, f)] ?? null]),
   )
 
-  // Accessories still show with no garment: an order can be a tie and nothing else.
+  // An order can be a tie and nothing else; the accessory list lives above, next to the picker.
   if (garments.length === 0) {
-    return (
-      <div className="space-y-4">
-        <Card className="text-stone-500">{t('noGarmentSelected')}</Card>
-        <AccessoryList order={order} onChange={onChange} />
-      </div>
-    )
+    return <Card className="text-stone-500">{t('noGarmentSelected')}</Card>
   }
 
   function setValue(field: string, raw: string) {
@@ -120,8 +114,8 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="lg:sticky lg:top-4 self-start">
           <Mannequin
+            garment={active}
             view={view}
-            fields={fields}
             values={valuesForFigure}
             activeField={activeField}
             onPick={focusField}
@@ -213,7 +207,6 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
         </div>
       </div>
 
-      <AccessoryList order={order} onChange={onChange} />
     </div>
   )
 }

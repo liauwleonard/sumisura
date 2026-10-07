@@ -1,4 +1,3 @@
-import { newId } from '../db/db'
 import type { Accessory, Order } from '../types'
 import { useSettings } from '../i18n'
 import { Button, Card, Field, inputClass } from './ui'
@@ -9,6 +8,9 @@ import { Button, Card, Field, inputClass } from './ui'
  * Deliberately not garments: they carry no measurement field set, and inventing one per
  * ornament would be guesswork. Size is free text instead — a tie is sized by length, a button
  * by diameter. They are priced, so they also appear on the Balance tab.
+ *
+ * Adding is done from the garment picker, so every "what is on this order" control sits in one
+ * row. This renders only when there is at least one, so it has no empty state.
  */
 export function AccessoryList({
   order,
@@ -23,9 +25,6 @@ export function AccessoryList({
   const set = (id: string, patch: Partial<Accessory>) =>
     onChange({ accessories: accessories.map((a) => (a.id === id ? { ...a, ...patch } : a)) })
 
-  const add = () =>
-    onChange({ accessories: [...accessories, { id: newId(), name: '', qty: 1 }] })
-
   const remove = (id: string) =>
     onChange({ accessories: accessories.filter((a) => a.id !== id) })
 
@@ -33,15 +32,16 @@ export function AccessoryList({
     <Card className="space-y-3">
       <div className="text-sm font-medium text-stone-600">{t('accessories')}</div>
 
-      {accessories.length === 0 && <p className="text-sm text-stone-500">{t('noAccessories')}</p>}
-
       {accessories.map((a) => (
-        <div key={a.id} className="space-y-3 rounded-lg border border-stone-200 p-3">
-          <div className="flex items-start gap-2">
+        <div key={a.id} className="rounded-lg border border-stone-200 p-3">
+          {/* One compact block per accessory. These sit above the measuring UI now, so a tall
+              card per tie would push the figure off the screen. Hints are placeholders. */}
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <Field label={t('accessoryName')} hint={t('accessoryNameHint')}>
+              <Field label={t('accessoryName')}>
                 <input
                   className={inputClass}
+                  placeholder={t('accessoryNameHint')}
                   value={a.name}
                   onChange={(e) => set(a.id, { name: e.target.value })}
                 />
@@ -52,10 +52,11 @@ export function AccessoryList({
             </Button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label={t('accessorySize')} hint={t('accessorySizeHint')}>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_5rem_1.5fr]">
+            <Field label={t('accessorySize')}>
               <input
                 className={inputClass}
+                placeholder={t('accessorySizeHint')}
                 value={a.size ?? ''}
                 onChange={(e) => set(a.id, { size: e.target.value })}
               />
@@ -77,19 +78,17 @@ export function AccessoryList({
                 }
               />
             </Field>
+            <Field label={t('notes')}>
+              <input
+                className={inputClass}
+                value={a.notes ?? ''}
+                onChange={(e) => set(a.id, { notes: e.target.value })}
+              />
+            </Field>
           </div>
-
-          <Field label={t('notes')}>
-            <input
-              className={inputClass}
-              value={a.notes ?? ''}
-              onChange={(e) => set(a.id, { notes: e.target.value })}
-            />
-          </Field>
         </div>
       ))}
 
-      <Button onClick={add}>+ {t('addAccessory')}</Button>
     </Card>
   )
 }

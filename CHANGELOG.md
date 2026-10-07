@@ -4,6 +4,57 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-08 — Accessories move up next to the garments
+- **`+ Accessory` now sits in the garment picker row**, after `+ Vest` and behind a thin
+  divider. It was a button at the very bottom of the Measurement step, below the figure, the
+  nine measurement fields and the posture card — far enough down to look missing.
+- The Accessories card moved up with it, directly under the picker, and **renders only when
+  there is at least one**. An order with no accessories pays nothing for the feature, and the
+  list no longer needs an empty state.
+- **Each accessory is now one compact block** — name on its own line, then size, material, qty
+  and notes across one row — and the two hints became placeholders. Moving a three-section card
+  above the measuring UI would otherwise have pushed the figure off the screen, which is the
+  problem being fixed, not a new one to introduce.
+- Dropped `addAccessory` and `noAccessories` from both dictionaries; nothing renders them now.
+- Unchanged: the accessory record itself, and Balance still prices them, with an unnamed one
+  falling back to the section word rather than the field label.
+
+### 2026-10-08 — Per-garment silhouettes on the measurement screen
+- **The one mannequin is gone.** Tapping Blazer, Trousers, Shirt or Vest now redraws the figure
+  as that garment. The shared body could not show where a vest hem or a trouser rise actually
+  sits, so every line was placed as a compromise.
+- Each drawing is **the garment and nothing else**, in two depths: the piece, then hairline
+  seams and creases. Blazer has notch lapels, flap pockets and a breast welt; trousers have the
+  waistband, fly, creases and slant pockets; shirt has a spread collar, placket and flat cuffs;
+  vest has the deep V, welt pockets and a pointed hem, with strap and buckle on the back.
+- **A faint ghost body was built, then removed on Leonard's call.** One set of human proportions
+  cannot serve four garments each scaled to fill the frame, so the body read long in the torso
+  and short in the leg whichever garment it sat behind. The tailor knows where a chest is; what
+  he needs is which number goes where on this piece.
+- **Length runs as a dimension line down the left**, not the centre. Down the middle it cut the
+  garment in half. Girth labels moved further out to clear it.
+- Each garment is **scaled to fill the frame**. Trousers were previously the bottom half of a
+  small full-body figure and are now full height.
+- The viewBox stays `-130 0 660 620` for all four, so the card does not change height when the
+  tailor switches tabs mid-measurement.
+- `LINES` is now keyed by garment and view (`LINES[garment][view]`), mirroring
+  `FIELDS_BY_GARMENT`. A line only means something against a specific drawing — `chest` sits at
+  y=248 on a blazer and y=266 on a vest.
+- **Trousers gained a back view.** It was blank before; `seat` and `rise` are genuinely taken
+  from behind.
+- Sleeves are drawn **before** the body, so the silhouette stays crisp instead of being
+  smothered, and each thick stroke is drawn twice — a wider outline pass under a fill pass,
+  since SVG gives a stroke no edge of its own.
+- Verified: every field has a line and no line names a field outside its garment; all 8 views
+  render with nothing clipped by the viewBox, no two labels overlapping, and no label crossing
+  the length rule — measured with the Indonesian dictionary plus a 5-character value, the worst
+  case. Blazer chest 98 leaves Shirt chest blank, so per-garment independence still holds.
+- **Photos were considered and rejected** for this screen: a dark product photo hides the
+  measurement lines, sleeves pressed against the body leave no room for the arm lines, and every
+  coordinate would be locked to one image. They are logged in PLAN.md as order-card thumbnails,
+  which is a different job.
+- Not changed: measurement keys, storage, sync, the invoice. This is presentation only.
+
 ### 2026-10-07 — Material per garment, printable invoice
 - **Material moved from the order to each garment.** The cut was already per item; the cloth was
   not, so a suit could not describe a wool blazer with trousers in a different weight. Each
