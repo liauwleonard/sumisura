@@ -13,41 +13,54 @@ import { FieldHistory } from '../../components/FieldHistory'
 import { label, useSettings } from '../../i18n'
 import { formatDate } from '../../lib/format'
 import { Button, Card, inputClass } from '../../components/ui'
+import { AccessoryList } from '../../components/AccessoryList'
+
+/** Accessories take their turn in the same strip as the garments — see `tab` below. */
+export type MeasureTab = Garment | 'accessories'
 
 interface Props {
   order: Order
   saved: boolean
+  tab: MeasureTab
+  onTab: (tab: MeasureTab) => void
   onChange: (patch: Partial<Order>) => void
 }
 
-export function MeasurementStep({ order, saved, onChange }: Props) {
+export function MeasurementStep({ order, saved, tab, onTab, onChange }: Props) {
   const { t, lang, unit, setUnit } = useSettings()
   const garments = useMemo(
     () => Array.from(new Set(order.items.map((i) => i.garment))) as Garment[],
     [order.items],
   )
-  const [garment, setGarment] = useState<Garment>(garments[0] ?? 'blazer')
+  const accessories = order.accessories ?? []
   const [view, setView] = useState<View>('front')
   const [activeField, setActiveField] = useState<string | null>(null)
   const inputs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  const active: Garment = garments.includes(garment) ? garment : (garments[0] ?? 'blazer')
+  /**
+   * One strip for everything on the order. Accessories sit beside the garments rather than in a
+   * card stacked above them, so five ties cost one tap instead of a page of scrolling.
+   */
+  const tabs: MeasureTab[] = [...garments, ...(accessories.length > 0 ? ['accessories' as const] : [])]
+  const active: MeasureTab = tabs.includes(tab) ? tab : (tabs[0] ?? 'blazer')
+  const onAccessories = active === 'accessories'
+  const garmentTab: Garment = onAccessories ? (garments[0] ?? 'blazer') : (active as Garment)
+
   // Same reasoning as `known()` in data/mannequin: never render off an unknown garment.
-  const fields = FIELDS_BY_GARMENT[active] ?? []
+  const fields = FIELDS_BY_GARMENT[garmentTab] ?? []
 
   /** The figure and its labels are keyed by bare field name, so unwrap this garment's slice. */
   const valuesForFigure = Object.fromEntries(
-    fields.map((f) => [f, order.measurements[measurementKey(active, f)] ?? null]),
+    fields.map((f) => [f, order.measurements[measurementKey(garmentTab, f)] ?? null]),
   )
 
-  // An order can be a tie and nothing else; the accessory list lives above, next to the picker.
-  if (garments.length === 0) {
+  if (tabs.length === 0) {
     return <Card className="text-stone-500">{t('noGarmentSelected')}</Card>
   }
 
   function setValue(field: string, raw: string) {
     const cm = fromDisplay(raw, unit)
-    const key = measurementKey(active, field)
+    const key = measurementKey(garmentTab, field)
     // Typing a value clears its "carried over" tag — it is now freshly measured.
     const { [key]: _dropped, ...restSources } = order.measurementSource
     void _dropped
@@ -67,28 +80,31 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
     if (!confirm(t('measureFreshConfirm'))) return
     // Clears this garment only — re-measuring a blazer should not wipe the trousers.
     const cleared = { ...order.measurements }
-    for (const f of fields) delete cleared[measurementKey(active, f)]
+    for (const f of fields) delete cleared[measurementKey(garmentTab, f)]
     const sources = { ...order.measurementSource }
-    for (const f of fields) delete sources[measurementKey(active, f)]
+    for (const f of fields) delete sources[measurementKey(garmentTab, f)]
     onChange({ measurements: cleared, measurementSource: sources })
   }
 
   return (
     <div className="space-y-4">
-      {/* garment + view + unit controls */}
+      {/* garment + accessory tabs, then view + unit controls */}
       <div className="flex flex-wrap items-center gap-2">
-        {garments.map((g) => (
+        {tabs.map((g) => (
           <button
             key={g}
-            onClick={() => setGarment(g)}
+            onClick={() => onTab(g)}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ${
               g === active ? 'bg-amber-700 text-white' : 'bg-white border border-stone-300'
             }`}
           >
-            {t(`garment_${g}`)}
+            {g === 'accessories'
+              ? `${t('accessories')} (${accessories.length})`
+              : t(`garment_${g}`)}
           </button>
         ))}
-        <span className="ml-auto flex gap-1 rounded-lg bg-stone-200 p-1">
+        {/* Front/back and cm/inch belong to the figure; on the accessory tab there isn't one. */}
+        <span className={`ml-auto flex gap-1 rounded-lg bg-stone-200 p-1 ${onAccessories ? 'hidden' : ''}`}>
           {(['front', 'back'] as View[]).map((v) => (
             <button
               key={v}
@@ -99,7 +115,7 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
             </button>
           ))}
         </span>
-        <span className="flex gap-1 rounded-lg bg-stone-200 p-1">
+        <span className={`flex gap-1 rounded-lg bg-stone-200 p-1 ${onAccessories ? 'hidden' : ''}`}>
           {(['cm', 'in'] as const).map((u) => (
             <button
               key={u}
@@ -112,10 +128,14 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
         </span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* The accessory tab replaces the figure entirely rather than stacking under it. */}
+      {onAccessories ? (
+        <AccessoryList order={order} onChange={onChange} />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
         <Card className="lg:sticky lg:top-4 self-start">
           <Mannequin
-            garment={active}
+            garment={garmentTab}
             view={view}
             values={valuesForFigure}
             activeField={activeField}
@@ -126,7 +146,7 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
         <div className="space-y-3">
           <Card className="space-y-3">
             {fields.map((field) => {
-              const key = measurementKey(active, field)
+              const key = measurementKey(garmentTab, field)
               const source = order.measurementSource[key]
               return (
                 <div key={field}>
@@ -206,7 +226,8 @@ export function MeasurementStep({ order, saved, onChange }: Props) {
             />
           </Card>
         </div>
-      </div>
+        </div>
+      )}
 
     </div>
   )

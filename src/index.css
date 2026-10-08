@@ -43,6 +43,13 @@ input[type='number']::-webkit-inner-spin-button {
     display: none !important;
   }
 
+  /* Browsers strip images and backgrounds from print by default to save ink. The letterhead
+     and the backdrop are the invoice's identity, so they are opted back in explicitly. */
+  .print-image {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   body {
     background: #fff;
     padding: 0;

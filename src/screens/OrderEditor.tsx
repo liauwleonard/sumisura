@@ -12,8 +12,7 @@ import {
   type OrderType,
 } from '../types'
 import { CustomerStep } from './steps/CustomerStep'
-import { AccessoryList } from '../components/AccessoryList'
-import { MeasurementStep } from './steps/MeasurementStep'
+import { MeasurementStep, type MeasureTab } from './steps/MeasurementStep'
 import { MaterialCutStep } from './steps/MaterialCutStep'
 import { BalanceStep } from './steps/BalanceStep'
 import { label, useSettings, type T } from '../i18n'
@@ -87,6 +86,12 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
    * and gating Invoice and Delete on the incoming prop hid them until it was reopened.
    */
   const [persisted, setPersisted] = useState(orderId !== null)
+  /**
+   * Which garment (or the accessories) the measurement step is showing. It lives here, above the
+   * `if (!draft)` guard with every other hook, because adding from the picker has to select what
+   * was just added — otherwise the button appears to do nothing.
+   */
+  const [tab, setTab] = useState<MeasureTab>('blazer')
 
   useEffect(() => {
     let cancelled = false
@@ -171,18 +176,22 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
     setPersisted(true)
   }
 
-  const addGarment = (garment: Garment) =>
+  const addGarment = (garment: Garment) => {
     change({
       items: [
         ...draft.items,
         { id: newId(), garment, cutStyle: { ...(prefill?.cutStyle[garment] ?? {}) } },
       ],
     })
+    setTab(garment)
+  }
 
   const removeGarment = (id: string) => change({ items: draft.items.filter((i) => i.id !== id) })
 
-  const addAccessory = () =>
+  const addAccessory = () => {
     change({ accessories: [...(draft.accessories ?? []), { id: newId(), name: '', qty: 1 }] })
+    setTab('accessories')
+  }
 
   return (
     <div className="mx-auto max-w-5xl p-4 pb-28">
@@ -255,11 +264,13 @@ export function OrderEditor({ shopId, orderId, onClose, onInvoice }: Props) {
             onAddAccessory={addAccessory}
             onRemove={removeGarment}
           />
-          {/* Only once there is one — an order with no accessories should not pay for the card. */}
-          {(draft.accessories ?? []).length > 0 && (
-            <AccessoryList order={draft} onChange={change} />
-          )}
-          <MeasurementStep order={draft} saved={persisted} onChange={change} />
+          <MeasurementStep
+            order={draft}
+            saved={persisted}
+            tab={tab}
+            onTab={setTab}
+            onChange={change}
+          />
         </div>
       )}
 

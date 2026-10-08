@@ -39,7 +39,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // jpg is here for the invoice letterhead and backdrop. Without it the sheet loses its
+        // identity the moment the shop wifi drops, which is exactly when it gets printed.
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,woff2}'],
         navigateFallback: `${BASE}index.html`,
         cleanupOutdatedCaches: true,
       },

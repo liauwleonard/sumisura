@@ -4,6 +4,53 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-08 — Accessories get their own tab; invoice letterhead carries the name
+- **Accessories now sit in the same strip as the garments** — `Blazer | Trousers |
+  Accessories (5)` — and selecting one swaps the figure for the list. They were a card stacked
+  above the measuring UI, so five ties meant a page of scrolling before reaching a measurement.
+  The strip's front/back and cm/inch toggles hide on the accessory tab: they belong to a figure,
+  and there isn't one.
+- The tab lives in `OrderEditor`, not in the step, because adding from the picker has to select
+  what was just added — otherwise `+ Accessory` appears to do nothing. Adding a garment now
+  selects that garment too.
+- **Fixed, mine, caught in testing:** the new tab state was declared after `if (!draft) return
+  null`, so it only ran on some renders and React threw "rendered more hooks than during the
+  previous render" — a blank screen. TypeScript cannot see this; only running it does.
+- **The invoice drops the shop name under the logo.** The mark already says it; set in text
+  underneath, it read as a stutter. The name still comes from the profile everywhere else, and
+  the logo carries it as alt text.
+- The backdrop is bigger — taller than the rows and centred on them, so it reads as a mark on
+  the sheet rather than a picture in a box — and sits at 25%. At the old size and strength it was
+  nearly invisible once the table grew.
+- **The cloth-and-cut lines under each garment moved from stone-500 to stone-700.** They were set
+  as captions, but they are the part a customer actually checks, and light grey lost them both
+  over the backdrop and through a photocopy. Darkening the text was the better answer than
+  weakening the mark — it fixes the plain-paper case too, which the backdrop never caused.
+  25% is now the ceiling: those lines are what gives way first.
+
+### 2026-10-08 — Invoice letterhead and backdrop
+- **The shop's logo now heads the invoice**, above the shop name, and the suit photograph sits
+  behind the item table. Both supplied by Leonard, both stored in `src/assets/`.
+- **Hardcoded on purpose.** There is one shop. When a second arrives these become two columns on
+  `shops` and two fields on the Profile screen; nothing else in `Invoice.tsx` has to change.
+- Both are `<img>`, not CSS backgrounds: browsers drop background images when printing, and this
+  sheet exists to be printed. `.print-image` opts them back in with `print-color-adjust: exact`.
+- **The backdrop is a cut-out**, supplied by Leonard with the background removed, and that is
+  what makes it work. The first pass used the photo as shot: a dark rectangle that had to be
+  held at 12% opacity and clipped to the table's width, and it still read as a grey band or a
+  printing fault rather than a mark. With no background there is no panel edge and no block of
+  grey to pay for in toner — only the garments — so it sits whole, centred, uncropped, at 20%.
+- A minimum height on the table container, for the backdrop rather than the rows: a one-item
+  invoice would otherwise leave it an inch tall and pointless.
+- Images downscaled on the way in. The cut-out came back from `sips` as 366 KB because the
+  resize expanded its palette to RGBA; re-quantised to a 64-colour palette it is 25 KB with
+  transparency intact. Letterhead and backdrop together are 58 KB in the offline bundle.
+- **`jpg` added to the service worker's precache globs.** Without it the invoice loses its
+  letterhead the moment the shop wifi drops — which is exactly when it gets printed. Precache
+  went from 15 entries to 17.
+- Removed the "Made to Measure" line under the shop name on the invoice only; the app header and
+  sign-in screen still use it.
+
 ### 2026-10-08 — Migration for orders written before the rename
 - **Fixed: opening an old Jacket or Waistcoat order white-screened the app.** Not a cosmetic
   problem — `FIELDS_BY_GARMENT['jacket']` is undefined and the measurement screen threw on

@@ -6,6 +6,8 @@ import { discountAmount, subtotalOf, type Order } from '../types'
 import { formatDate, formatMoney } from '../lib/format'
 import { Button } from '../components/ui'
 import { CUT_OPTIONS } from '../data/cutStyles'
+import logo from '../assets/shop-logo.jpg'
+import backdrop from '../assets/invoice-backdrop.png'
 
 /**
  * A printable invoice, handed over at the first meeting.
@@ -16,6 +18,11 @@ import { CUT_OPTIONS } from '../data/cutStyles'
  *
  * Printing goes through the browser, so "Save as PDF" and a paper copy are the same action,
  * and the PDF is what gets shared on WhatsApp.
+ *
+ * The letterhead and the backdrop are HARDCODED, because there is exactly one shop. When a
+ * second one arrives they become two more columns on `shops` and two more fields on the Profile
+ * screen; nothing else here has to change. Both are <img> rather than CSS backgrounds — browsers
+ * drop background images when printing, and this sheet exists to be printed.
  */
 export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => void }) {
   const { t, lang } = useSettings()
@@ -47,8 +54,9 @@ export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => 
         {/* --- header: wordmark left, document identity right --- */}
         <div className="flex items-start justify-between gap-6">
           <div>
-            <div className="text-2xl font-semibold tracking-tight">{shop.name}</div>
-            <div className="text-xs uppercase tracking-widest text-stone-500">{t('tagline')}</div>
+            {/* The mark is the name — set in text underneath it, it read as a stutter. The shop
+                name still comes from the profile everywhere else. */}
+            <img src={logo} alt={shop.name} className="print-image h-24 w-auto" />
           </div>
           <div className="text-right">
             <div className="text-xl font-semibold uppercase tracking-widest">{t('invoice')}</div>
@@ -68,46 +76,62 @@ export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => 
         </div>
 
         {/* --- what was ordered --- */}
-        <table className="mt-6 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-y border-stone-300 text-left">
-              <th className="py-2 font-medium">{t('invoiceItem')}</th>
-              <th className="py-2 text-right font-medium">{t('invoiceAmount')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items.map((item) => (
-              <tr key={item.id} className="border-b border-stone-200 align-top">
-                <td className="py-3">
-                  <div className="font-medium">{t(`garment_${item.garment}`)}</div>
-                  <Detail lines={materialLines(item.material, t)} />
-                  <Detail lines={cutLines(item.garment, item.cutStyle, t)} />
-                  {item.notes && <div className="text-xs text-stone-500">{item.notes}</div>}
-                </td>
-                <td className="py-3 text-right tabular-nums">
-                  {formatMoney(item.price ?? 0, lang)}
-                </td>
+        {/* The minimum height is for the backdrop, not the rows: a one-item invoice would
+            otherwise leave it an inch tall and pointless. */}
+        <div className="relative mt-6 min-h-[360px]">
+          {/* Taller than the rows and centred on them, so it reads as a mark on the sheet rather
+              than a picture in a box. The cut-out has no background of its own, so there is no
+              panel edge to give it away and no block of grey to pay for in toner — only the
+              garments. 25% is the ceiling: the cloth-and-cut lines underneath each garment are
+              what a customer actually reads, and they start to go at anything stronger. They are
+              set in stone-700 for the same reason — see `Detail` below. */}
+          <img
+            src={backdrop}
+            alt=""
+            aria-hidden
+            className="print-image pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"
+          />
+          <table className="relative w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-y border-stone-300 text-left">
+                <th className="py-2 font-medium">{t('invoiceItem')}</th>
+                <th className="py-2 text-right font-medium">{t('invoiceAmount')}</th>
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              {order.items.map((item) => (
+                <tr key={item.id} className="border-b border-stone-200 align-top">
+                  <td className="py-3">
+                    <div className="font-medium">{t(`garment_${item.garment}`)}</div>
+                    <Detail lines={materialLines(item.material, t)} />
+                    <Detail lines={cutLines(item.garment, item.cutStyle, t)} />
+                    {item.notes && <div className="text-xs text-stone-700">{item.notes}</div>}
+                  </td>
+                  <td className="py-3 text-right tabular-nums">
+                    {formatMoney(item.price ?? 0, lang)}
+                  </td>
+                </tr>
+              ))}
 
-            {accessories.map((a) => (
-              <tr key={a.id} className="border-b border-stone-200 align-top">
-                <td className="py-3">
-                  <div className="font-medium">
-                    {a.name || t('accessories')}
-                    {(a.qty ?? 1) > 1 && ` ×${a.qty}`}
-                  </div>
-                  <Detail
-                    lines={[a.size, a.material, a.notes].filter(Boolean).map((v) => String(v))}
-                  />
-                </td>
-                <td className="py-3 text-right tabular-nums">
-                  {formatMoney((a.price ?? 0) * (a.qty ?? 1), lang)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              {accessories.map((a) => (
+                <tr key={a.id} className="border-b border-stone-200 align-top">
+                  <td className="py-3">
+                    <div className="font-medium">
+                      {a.name || t('accessories')}
+                      {(a.qty ?? 1) > 1 && ` ×${a.qty}`}
+                    </div>
+                    <Detail
+                      lines={[a.size, a.material, a.notes].filter(Boolean).map((v) => String(v))}
+                    />
+                  </td>
+                  <td className="py-3 text-right tabular-nums">
+                    {formatMoney((a.price ?? 0) * (a.qty ?? 1), lang)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* --- money --- */}
         <div className="mt-4 flex justify-end">
@@ -156,9 +180,14 @@ function Line({ label, value }: { label: string; value: string }) {
   )
 }
 
+/**
+ * stone-700, not the stone-500 a caption would normally take. This is the cloth and the cut —
+ * the part a customer actually checks — and it has to hold up over the backdrop and through a
+ * photocopy. Light grey lost it on both counts.
+ */
 function Detail({ lines }: { lines: string[] }) {
   if (lines.length === 0) return null
-  return <div className="text-xs text-stone-500">{lines.join(' · ')}</div>
+  return <div className="text-xs text-stone-700">{lines.join(' · ')}</div>
 }
 
 /** Meters are left out on purpose: the customer is buying a garment, not a length of cloth. */

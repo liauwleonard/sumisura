@@ -102,6 +102,20 @@ TypeScript — they can be ignored or removed.
   Both are plain records; a missing key is `undefined` and the next `.map` or `[view]` throws,
   which is a white screen rather than a blank field. Test a rename by planting a pre-rename row
   in IndexedDB and opening it — a clean build proves nothing about stored data.
+- **Local-only testing: use `.env.local`, never move `.env`.** Vite loads `.env.local` after
+  `.env`, so empty values there win and the app runs with no sign-in and no sync. It is covered
+  by the `.env*` rule in `.gitignore`, so it cannot be committed, and the real config in `.env`
+  is never touched. Delete the file to go back to cloud mode. (Moving `.env` aside has twice led
+  to a build that silently shipped the wrong mode.) Note it also affects a LOCAL `npm run build`
+  — deploys are fine because GitHub Actions never sees the file.
+- **Invoice branding is hardcoded, single-tenant.** `src/assets/shop-logo.jpg` and
+  `invoice-backdrop.png` are wired straight into `src/screens/Invoice.tsx`. The backdrop must
+  stay a transparent cut-out — a photo with its background intact becomes a grey block that
+  fights the amounts and costs toner. A second shop makes
+  them `shops` columns and Profile fields. Any new image type must also be added to
+  `globPatterns` in `vite.config.ts`, or it is missing offline.
+- **Print drops images and backgrounds by default.** Anything that must appear on paper needs
+  `.print-image` (`print-color-adjust: exact`) and should be an `<img>`, never a CSS background.
 - **Never switch the PWA to `autoUpdate`.** A silent reload can discard unsaved measurements.
   The prompt in `src/components/UpdatePrompt.tsx` is deliberate.
 - **Icons are generated, not committed by hand.** Edit `public/icon.svg`, mirror the change in
