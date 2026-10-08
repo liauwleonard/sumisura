@@ -4,6 +4,50 @@ All notable changes to this project. Newest first.
 
 ## [Unreleased]
 
+### 2026-10-08 — Invoice prints as a real A5 sheet
+- **`@page` was `A4` while the shop prints A5**, so every sheet was scaled to fit — about 71%.
+  The letterhead, the amounts and the cloth-and-cut lines all came out a third smaller than they
+  were designed, which is what "the logo is too small on A5" actually was. Nothing looks wrong on
+  screen while it is happening, which is what makes it easy to miss.
+- Now `size: A5; margin: 10mm`. 10mm rather than A4's 14mm: on a 148mm page that margin eats an
+  eighth of the width.
+- The invoice container drops its `max-w-3xl` cap in print. At ~203mm it is wider than A5's 128mm
+  printable width, and overflowing the page box would bring back the very shrink it is meant to
+  avoid.
+- At true scale the logo is 25.4 × 36.9mm — 29% of the printable width — so it needs no resizing
+  once the page is right.
+- **Known, not yet addressed:** a seven-line invoice is ~248mm tall against A5's 190mm, so it runs
+  to a second page. About three or four lines fit on one sheet. Rows already carry
+  `break-inside: avoid`, so a spill breaks cleanly between rows rather than through one.
+
+### 2026-10-08 — Measurement fields reordered to the tailor's own sequence
+- **Each garment's fields now run in the order he reads them off the body**, from his written
+  note. Labels are unchanged and so are the stored keys — this is sequence only, plus three
+  additions.
+  - Blazer: length, arm length, shoulder, chest, waist, bicep, **elbow**, wrist
+  - Trousers: outseam, waist, seat, thigh, rise, **calf**, hem
+  - Shirt: length, arm length, shoulder, chest, waist, **bicep**, **elbow**, cuff, neck
+- **Three fields added:** `elbow` (blazer and shirt), `calf` (trousers), and `bicep` on the shirt,
+  which only the blazer had. Each has EN + ID labels and a line on the figure. Elbow was dropped
+  on 7 Oct on the tailor's word and is back on his own list — his call, noted here so the
+  reversal is on the record rather than looking like drift.
+- **His words map onto existing fields, not new ones**: "abdominal size" is `waist`, "arm size"
+  is `bicep`, "hips size" is `seat`, "crotch" is `rise`, "trousers length" is `outseam`, "ankle
+  size" is `hem`, and the shirt's "wrist size" is `cuff`. Nothing was renamed.
+- **Fields he did not list are kept, below his order** — Seat and Back width on the blazer, Back
+  width on the shirt, Knee and Inseam on the trousers. Leonard's call: removing one only hides
+  it, but a field gone from the form is one nobody notices is missing.
+- Outseam reads **"Outseam (trouser length)"** in English, since that is the name he uses for it.
+  Dictionary only — the stored key is still `outseam`. Lower case inside the brackets to match
+  "Waist (trousers)" and "Waist (shirt)". The Indonesian is left as "Panjang celana luar", which
+  already says outer trouser length.
+- Vest is untouched; he gave no list for it.
+- Outseam's label moved down the rule to make room for Calf, which landed exactly on it.
+- No migration. Reordering touches no keys, and the three new fields are simply blank on existing
+  orders.
+- Verified: every field still has a line and no line names a field outside its garment; all 8
+  views clean against the Indonesian dictionary — nothing clipped, nothing overlapping.
+
 ### 2026-10-08 — Accessories get their own tab; invoice letterhead carries the name
 - **Accessories now sit in the same strip as the garments** — `Blazer | Trousers |
   Accessories (5)` — and selecting one swaps the figure for the list. They were a card stacked
@@ -20,13 +64,18 @@ All notable changes to this project. Newest first.
   underneath, it read as a stutter. The name still comes from the profile everywhere else, and
   the logo carries it as alt text.
 - The backdrop is bigger — taller than the rows and centred on them, so it reads as a mark on
-  the sheet rather than a picture in a box — and sits at 25%. At the old size and strength it was
+  the sheet rather than a picture in a box — and sits at 25%, which is what it takes to read as
+  a mark at all. At the old size and strength it was
   nearly invisible once the table grew.
-- **The cloth-and-cut lines under each garment moved from stone-500 to stone-700.** They were set
-  as captions, but they are the part a customer actually checks, and light grey lost them both
-  over the backdrop and through a photocopy. Darkening the text was the better answer than
-  weakening the mark — it fixes the plain-paper case too, which the backdrop never caused.
-  25% is now the ceiling: those lines are what gives way first.
+- **The cloth-and-cut lines under each garment went from stone-500 to stone-800, at 13px.** They
+  were set as captions, but they are the part a customer actually checks, and caption grey lost
+  them both over the backdrop and through a photocopy. They now take the same colour as the
+  garment name above them and sit one point smaller — the hierarchy is carried by weight, not by
+  greyness.
+  - Settled after a detour worth recording: stone-700 looked fixed on its own, but against a
+    25% backdrop it was still too light, so the mark got dropped to 10% to compensate and stopped
+    reading as a mark. Darkening the text properly is what lets both sit at full strength.
+    Weakening the image was treating the symptom.
 
 ### 2026-10-08 — Invoice letterhead and backdrop
 - **The shop's logo now heads the invoice**, above the shop name, and the suit photograph sits

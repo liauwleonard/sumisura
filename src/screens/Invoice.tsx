@@ -39,8 +39,11 @@ export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => 
   const accessories = order.accessories ?? []
   const discount = discountAmount(order)
 
+  // On paper the width cap is dropped: max-w-3xl is ~203mm, wider than A5's 128mm printable
+  // width, and overflowing the page box brings back the very shrink-to-fit that the A5 @page
+  // rule exists to avoid.
   return (
-    <div className="mx-auto max-w-3xl p-4">
+    <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="print-hide mb-4 flex items-center gap-2">
         <Button variant="ghost" onClick={onClose}>
           ‹ {t('goBack')}
@@ -78,18 +81,17 @@ export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => 
         {/* --- what was ordered --- */}
         {/* The minimum height is for the backdrop, not the rows: a one-item invoice would
             otherwise leave it an inch tall and pointless. */}
-        <div className="relative mt-6 min-h-[360px]">
+        <div className="relative mt-6 min-h-[360px] print:min-h-[240px]">
           {/* Taller than the rows and centred on them, so it reads as a mark on the sheet rather
               than a picture in a box. The cut-out has no background of its own, so there is no
               panel edge to give it away and no block of grey to pay for in toner — only the
-              garments. 25% is the ceiling: the cloth-and-cut lines underneath each garment are
-              what a customer actually reads, and they start to go at anything stronger. They are
-              set in stone-700 for the same reason — see `Detail` below. */}
+              garments. 25% is what it takes to read as a mark at all; what makes that safe is the
+              weight of the text over it, not a weaker image — see `Detail` below. */}
           <img
             src={backdrop}
             alt=""
             aria-hidden
-            className="print-image pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"
+            className="print-image pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 opacity-25"
           />
           <table className="relative w-full border-collapse text-sm">
             <thead>
@@ -105,7 +107,7 @@ export function Invoice({ orderId, onClose }: { orderId: string; onClose: () => 
                     <div className="font-medium">{t(`garment_${item.garment}`)}</div>
                     <Detail lines={materialLines(item.material, t)} />
                     <Detail lines={cutLines(item.garment, item.cutStyle, t)} />
-                    {item.notes && <div className="text-xs text-stone-700">{item.notes}</div>}
+                    {item.notes && <div className="text-[13px] text-stone-800">{item.notes}</div>}
                   </td>
                   <td className="py-3 text-right tabular-nums">
                     {formatMoney(item.price ?? 0, lang)}
@@ -181,13 +183,14 @@ function Line({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * stone-700, not the stone-500 a caption would normally take. This is the cloth and the cut —
- * the part a customer actually checks — and it has to hold up over the backdrop and through a
- * photocopy. Light grey lost it on both counts.
+ * Same colour as the garment name above it, and only a point smaller — the hierarchy is carried
+ * by weight, not by greyness. This is the cloth and the cut, the part a customer actually
+ * checks, and it has to hold up over the backdrop and through a photocopy. Caption grey lost it
+ * on both counts; stone-700 was still losing it at a readable backdrop strength.
  */
 function Detail({ lines }: { lines: string[] }) {
   if (lines.length === 0) return null
-  return <div className="text-xs text-stone-700">{lines.join(' · ')}</div>
+  return <div className="text-[13px] text-stone-800">{lines.join(' · ')}</div>
 }
 
 /** Meters are left out on purpose: the customer is buying a garment, not a length of cloth. */

@@ -35,8 +35,17 @@ input[type='number']::-webkit-inner-spin-button {
    and the page itself drops its background so a printer does not flood the paper with grey. */
 @media print {
   @page {
-    size: A4;
-    margin: 14mm;
+    /*
+     * A5, because that is the paper the shop actually uses. This has to match: a sheet that
+     * declares A4 and lands on A5 is scaled to fit — about 71% — so the letterhead, the amounts
+     * and the cloth-and-cut lines all print a third smaller than they were designed. Nothing in
+     * the layout looks wrong on screen while that is happening, which is what makes it easy to
+     * miss and hard to diagnose from a printout.
+     *
+     * 10mm rather than 14mm: on a 148mm-wide page, A4's margin eats an eighth of the width.
+     */
+    size: A5;
+    margin: 10mm;
   }
 
   .print-hide {

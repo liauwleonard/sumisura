@@ -5,29 +5,51 @@ import type { Garment } from '../types'
  * display names live in the i18n dictionaries, so relabelling is free.
  */
 export const FIELDS_BY_GARMENT: Record<Garment, string[]> = {
-  // No neck: the tailor takes it on the shirt, which is what the collar is cut from.
+  /*
+   * Ordered as the tailor reads them off the body, from his own note (8 Oct 2026). Anything he
+   * did not list is kept, below his order rather than dropped: Leonard's call, "just in case".
+   * Removing a field only hides it anyway — the stored numbers survive — but a field that is
+   * gone from the form is a field nobody notices is missing.
+   */
   blazer: [
-    'chest',
-    'waist',
-    'seat',
-    'shoulder_width',
-    'back_width',
-    'arm_length',
-    'bicep',
-    'wrist',
     'blazer_length',
-  ],
-  trousers: ['trouser_waist', 'seat', 'thigh', 'knee', 'hem', 'outseam', 'inseam', 'rise'],
-  shirt: [
-    'neck',
-    'chest',
-    'shirt_waist',
-    'shoulder_width',
-    'back_width',
     'arm_length',
-    'cuff',
-    'shirt_length',
+    'shoulder_width',
+    'chest',
+    'waist', // his "abdominal size"
+    'bicep', // his "arm size"
+    'elbow',
+    'wrist',
+    // not on his list
+    'seat',
+    'back_width',
   ],
+  trousers: [
+    'outseam', // his "trousers length" — waist to floor, outside leg
+    'trouser_waist',
+    'seat', // his "hips size"
+    'thigh',
+    'rise', // his "crotch"
+    'calf',
+    'hem', // his "ankle size" — the opening
+    // not on his list
+    'knee',
+    'inseam',
+  ],
+  shirt: [
+    'shirt_length',
+    'arm_length',
+    'shoulder_width',
+    'chest',
+    'shirt_waist', // his "abdominal size"
+    'bicep', // his "arm size"
+    'elbow',
+    'cuff', // his "wrist size"
+    'neck',
+    // not on his list
+    'back_width',
+  ],
+  // No list from him for the vest, so it stands as it was.
   vest: ['chest', 'waist', 'shoulder_width', 'back_width', 'vest_length'],
 }
 

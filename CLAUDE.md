@@ -80,6 +80,9 @@ TypeScript — they can be ignored or removed.
   entry per editing session.
 - **Mannequin labels need gutters.** The viewBox is `-130 0 660 620`; the body only occupies
   x 40–360. Indonesian labels are long and clip against a body-tight viewBox.
+- **`FIELDS_BY_GARMENT` order is the form order, and it is the tailor's, not ours.** It follows
+  the sequence he reads off the body (his note, 8 Oct 2026), with anything he did not list kept
+  at the end of each list. Do not re-sort it for tidiness.
 - **Adding a measurement field** means: add the key to `FIELDS_BY_GARMENT`, add `m_<key>` to both
   dictionaries, and add a line to `LINES[garment][view]` if it should appear on the figure. The
   two tables must agree in both directions — a field with no line is merely form-only, but a line
